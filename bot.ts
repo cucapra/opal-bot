@@ -21,6 +21,7 @@ interface Message {
 
 rtm.on(slack_client.RTM_EVENTS.MESSAGE, (message: any) => {
   console.log(`${message.user} sez ${message.text}`);
+  rtm.sendMessage("hi!", message.channel);
 });
 
 rtm.start();
