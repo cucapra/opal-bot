@@ -1,0 +1,19 @@
+{
+  "name": "opal-bot",
+  "version": "1.0.0",
+  "author": "Adrian Sampson <asampson@cs.cornell.edu>",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+  },
+  "devDependencies": {
+    "@types/node": "^7.0.22",
+    "typescript": "^2.3.4"
+  },
+  "bin": {
+    "bot": "build/bot.js"
+  },
+  "scripts": {
+    "compile": "tsc"
+  }
+}
