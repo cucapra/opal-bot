@@ -15,6 +15,6 @@
     "bot": "build/bot.js"
   },
   "scripts": {
-    "compile": "tsc"
+    "build": "tsc"
   }
 }
