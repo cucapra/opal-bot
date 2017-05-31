@@ -9,4 +9,5 @@ run:
 
 .PHONY: deploy
 deploy:
-	ssh waffle 'cd waffle; docker-compose restart opal'
+	ssh waffle 'cd waffle; docker-compose exec opal /bin/sh update.sh; \
+		docker-compose restart opal'
