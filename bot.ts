@@ -1,6 +1,7 @@
 const slack_client = require('@slack/client');
 
 const bot_token = process.env['SLACK_BOT_TOKEN'] || '';
+const status_chan = 'bot-status';
 
 let rtm = new slack_client.RtmClient(bot_token);
 
@@ -59,9 +60,27 @@ interface RTMStartData {
   acceptedScopes: string[];
 };
 
+let cur_channels: Channel[] = [];
+let status_channel_id: string | null = null;
+
 // Event handler for successful connection.
 rtm.on(slack_client.CLIENT_EVENTS.RTM.AUTHENTICATED, (startData: RTMStartData) => {
-  console.log(`Logged in as ${startData.self.name} of team ${startData.team.name}`);
+  console.log(`logged in as ${startData.self.name} to ${startData.team.name}`);
+
+  cur_channels = startData.channels;
+
+  // Look for the status channel.
+  for (let channel of cur_channels) {
+    if (channel.name === status_chan && channel.is_member) {
+      status_channel_id = channel.id;
+    }
+  }
+});
+
+rtm.on(slack_client.CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
+  if (status_channel_id) {
+    rtm.sendMessage(':wave:', status_channel_id);
+  }
 });
 
 interface Message {
@@ -76,7 +95,7 @@ interface Message {
 
 rtm.on(slack_client.RTM_EVENTS.MESSAGE, (message: any) => {
   console.log(`${message.user} sez ${message.text}`);
-  rtm.sendMessage("hi!", message.channel);
+  // rtm.sendMessage("hi!", message.channel);
 });
 
 rtm.start();
