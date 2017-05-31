@@ -45,6 +45,20 @@ interface Channel {
   previous_names: string[];
 };
 
+interface IM {
+  id: string;
+  created: number;
+  is_im: boolean;
+  is_org_shared: boolean;
+  user: string;
+  has_pins: false;
+  last_read: string;
+  latest: any;
+  unread_count: number;
+  unread_count_display: number;
+  is_open: boolean;
+};
+
 interface RTMStartData {
   ok: boolean;
   self: User;
@@ -52,7 +66,7 @@ interface RTMStartData {
   latest_event_ts: string;
   channels: Channel[];
   groups: object[];
-  ims: object[];
+  ims: IM[];
   cache_ts: number;
   users: object[];
   url: string;
@@ -60,17 +74,25 @@ interface RTMStartData {
   acceptedScopes: string[];
 };
 
-let cur_channels: Channel[] = [];
+// State bits that should be come fields someday.
+let cur_channels: { [id: string]: Channel } = {};
+let cur_ims: { [id: string]: IM } = {};
 let status_channel_id: string | null = null;
 
 // Event handler for successful connection.
 rtm.on(slack_client.CLIENT_EVENTS.RTM.AUTHENTICATED, (startData: RTMStartData) => {
   console.log(`logged in as ${startData.self.name} to ${startData.team.name}`);
+  console.log(startData);
 
-  cur_channels = startData.channels;
+  for (let channel of startData.channels) {
+    cur_channels[channel.id] = channel;
+  }
+  for (let im of startData.ims) {
+    cur_ims[im.id] = im;
+  }
 
   // Look for the status channel.
-  for (let channel of cur_channels) {
+  for (let channel of startData.channels) {
     if (channel.name === status_chan && channel.is_member) {
       status_channel_id = channel.id;
     }
@@ -95,7 +117,11 @@ interface Message {
 
 rtm.on(slack_client.RTM_EVENTS.MESSAGE, (message: any) => {
   console.log(`${message.user} sez ${message.text}`);
-  // rtm.sendMessage("hi!", message.channel);
+
+  // Respond to private messages, just for fun.
+  if (cur_ims[message.channel]) {
+    rtm.sendMessage("hi!", message.channel);
+  }
 });
 
 rtm.start();
