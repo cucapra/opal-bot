@@ -3,7 +3,13 @@ build:
 	yarn
 	yarn run build
 
+.PHONY: run
+run:
+	node build/bot.js
+
+.PHONY: buildrun
+buildrun: build run
+
 .PHONY: deploy
 deploy:
-	ssh waffle 'cd waffle; docker-compose exec opal git pull; \
-		docker-compose exec opal make; docker-compose restart opal'
+	ssh waffle 'cd waffle; docker-compose restart opal'
