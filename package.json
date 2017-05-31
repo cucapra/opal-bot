@@ -5,6 +5,7 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
+    "@slack/client": "^3.10.0"
   },
   "devDependencies": {
     "@types/node": "^7.0.22",
