@@ -99,7 +99,7 @@ rtm.on(slack_client.CLIENT_EVENTS.RTM.AUTHENTICATED, (startData: RTMStartData) =
   }
 });
 
-function git_commit(path: string): Promise<string> {
+function git_summary(path: string): Promise<string> {
   return new Promise((resolve, reject) => {
     child_process.exec('git rev-parse --short HEAD', { cwd: path },
                        (error, stdout, stderr) => {
@@ -115,7 +115,7 @@ function git_commit(path: string): Promise<string> {
 rtm.on(slack_client.CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
   // Indicate that we've started.
   if (status_channel_id) {
-    git_commit(__dirname).then((commit) => {
+    git_summary(__dirname).then((commit) => {
       rtm.sendMessage(`:wave: @ ${commit}`, status_channel_id);
     });
   }
