@@ -86,8 +86,8 @@ export interface Message {
 export class Bot {
   public rtm: any;
 
-  public cur_channels: { [id: string]: Channel } = {};
-  public cur_ims: { [id: string]: IM } = {};
+  public channels: Map<string, Channel> = new Map();
+  public ims: Map<string, IM> = new Map();
   public status_channel_id: string | null = null;
 
   /**
@@ -101,10 +101,10 @@ export class Bot {
     this.rtm.on(slack_client.CLIENT_EVENTS.RTM.AUTHENTICATED,
                 (startData: RTMStartData) => {
       for (let channel of startData.channels) {
-        this.cur_channels[channel.id] = channel;
+        this.channels.set(channel.id, channel);
       }
       for (let im of startData.ims) {
-        this.cur_ims[im.id] = im;
+        this.ims.set(im.id, im);
       }
     });
   }

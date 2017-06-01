@@ -29,8 +29,7 @@ function git_summary(path: string): Promise<string> {
 bot.rtm.on(slack_client.CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
   // Look for the status channel.
   let status_channel_id: string | null = null;
-  for (let channel_id in bot.cur_channels) {
-    let channel = bot.cur_channels[channel_id];
+  for (let [id, channel] of bot.channels) {
     if (channel.name === status_chan && channel.is_member) {
       status_channel_id = channel.id;
     }
@@ -48,7 +47,7 @@ bot.rtm.on(slack_client.RTM_EVENTS.MESSAGE, (message: Message) => {
   console.log(`${message.user} sez ${message.text}`);
 
   // Respond to private messages, just for fun.
-  if (bot.cur_ims[message.channel]) {
+  if (bot.ims.get(message.channel)) {
     bot.rtm.sendMessage("hi!", message.channel);
   }
 });
