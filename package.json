@@ -5,10 +5,12 @@
   "license": "MIT",
   "private": true,
   "dependencies": {
-    "@slack/client": "^3.10.0"
+    "@slack/client": "^3.10.0",
+    "node-wit": "^4.2.0"
   },
   "devDependencies": {
     "@types/node": "^7.0.22",
+    "@types/node-wit": "^4.2.2",
     "typescript": "^2.3.4"
   },
   "bin": {
