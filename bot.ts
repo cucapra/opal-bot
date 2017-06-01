@@ -25,6 +25,25 @@ function git_summary(path: string): Promise<string> {
   });
 }
 
+/**
+ * Handle a direct interaction.
+ */
+async function interact(message: string): Promise<string | null> {
+  let res = await wit_client.message(message, {});
+  console.log(`Wit parse: ${util.inspect(res, { depth: undefined })}`);
+
+  if (wit.getEntity(res, "greetings")) {
+    return "hi!";
+  } else {
+    let intent = wit.entityValue(res, "intent");
+    if (intent) {
+      return `your intent: ${intent}`;
+    }
+  }
+
+  return ':confused: :grey_question:';
+}
+
 const wit_client = new Wit({
   accessToken: WIT_TOKEN,
 });
@@ -46,16 +65,9 @@ bot.on("message", async (message) => {
   // Parse private messages.
   if (bot.ims.get(message.channel)) {
     console.log(`${message.user}: ${message.text}`);
-    let res = await wit_client.message(message.text, {});
-    console.log(`Wit parse: ${util.inspect(res, { depth: undefined })}`);
-
-    if (wit.getEntity(res, "greeting")) {
-      bot.send("hi!", message.channel);
-    } else {
-      let intent = wit.entityValue(res, "intent");
-      if (intent) {
-        bot.send(`your intent: ${intent}`, message.channel);
-      }
+    let reply = await interact(message.text);
+    if (reply) {
+      bot.send(reply, message.channel);
     }
   }
 });
