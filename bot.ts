@@ -33,8 +33,9 @@ bot.rtm.on(slack_client.CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
 
   // Indicate that we've started.
   if (status_channel_id) {
+    let cid = status_channel_id;
     git_summary(__dirname).then((commit) => {
-      bot.rtm.sendMessage(`:wave: @ ${commit}`, status_channel_id);
+      bot.send(`:wave: @ ${commit}`, cid);
     });
   }
 });
@@ -44,7 +45,7 @@ bot.rtm.on(slack_client.RTM_EVENTS.MESSAGE, (message: Message) => {
 
   // Respond to private messages, just for fun.
   if (bot.ims.get(message.channel)) {
-    bot.rtm.sendMessage("hi!", message.channel);
+    bot.send("hi!", message.channel);
   }
 });
 

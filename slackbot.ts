@@ -114,6 +114,16 @@ export class Bot {
     });
   }
 
+  /**
+   * Send a message.
+   */
+  send(message: string, channel_id: string) {
+    this.rtm.sendMessage(message, channel_id);
+  }
+
+  /**
+   * Start the connection.
+   */
   start() {
     this.rtm.start();
   }
