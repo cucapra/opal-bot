@@ -83,6 +83,22 @@ export interface Message {
   team: string;
 };
 
+/**
+ * Types for our renamed events.
+ */
+interface Events {
+  ready: () => void;
+  message: (message: Message) => void;
+};
+
+/**
+ * Easier names for events in the Slack client library.
+ */
+const EVENT_IDS = {
+  ready: slack_client.CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED,
+  message: slack_client.RTM_EVENTS.MESSAGE,
+};
+
 export class Bot {
   public rtm: any;
 
@@ -126,5 +142,12 @@ export class Bot {
    */
   start() {
     this.rtm.start();
+  }
+
+  /**
+   * Nicer interface to listeners.
+   */
+  on(event: keyof Events, listener: Events[typeof event]) {
+    this.rtm.on(EVENT_IDS[event], listener);
   }
 }

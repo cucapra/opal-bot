@@ -20,7 +20,7 @@ function git_summary(path: string): Promise<string> {
 
 let bot = new Bot(bot_token);
 
-bot.rtm.on(slack_client.CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
+bot.on("ready", () => {
   console.log(`I'm ${bot.self.name} on ${bot.team.name}`);
 
   // Look for the status channel.
@@ -40,7 +40,7 @@ bot.rtm.on(slack_client.CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
   }
 });
 
-bot.rtm.on(slack_client.RTM_EVENTS.MESSAGE, (message: Message) => {
+bot.on("message", (message) => {
   console.log(`${message.user} sez ${message.text}`);
 
   // Respond to private messages, just for fun.
