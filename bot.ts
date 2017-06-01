@@ -29,22 +29,26 @@ function git_summary(path: string): Promise<string> {
 /**
  * Handle a direct interaction.
  */
-async function interact(message: string): Promise<string | null> {
+async function interact(message: string, reply: (message: string) => void) {
   let res = await wit_client.message(message, {});
   console.log(`Wit parse: ${util.inspect(res, { depth: undefined })}`);
 
   if (wit.getEntity(res, "greetings")) {
-    return "hi!";
+    reply("hi!");
+    return;
   } else {
     let intent = wit.entityValue(res, "intent");
     if (intent === "show_calendar") {
-      return "let's get your calendar!";
+      reply("let's get your calendar!");
+      return;
     } else if (intent === "schedule_meeting") {
-      return "let's schedule a meeting!";
+      reply("let's schedule a meeting!");
+      return;
     }
   }
 
-  return ':confused: :grey_question:';
+  // Unhandled message.
+  reply(':confused: :grey_question:');
 }
 
 const wit_client = new Wit({
@@ -68,10 +72,7 @@ bot.on("message", async (message) => {
   // Parse private messages.
   if (bot.ims.get(message.channel)) {
     console.log(`${message.user}: ${message.text}`);
-    let reply = await interact(message.text);
-    if (reply) {
-      bot.send(reply, message.channel);
-    }
+    await interact(message.text, txt => bot.send(txt, message.channel));
   }
 });
 
