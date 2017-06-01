@@ -7,10 +7,12 @@
   "dependencies": {
     "@slack/client": "^3.10.0",
     "ical.js": "^1.2.2",
+    "lokijs": "^1.4.3",
     "node-fetch": "^1.7.0",
     "node-wit": "^4.2.0"
   },
   "devDependencies": {
+    "@types/lokijs": "^1.2.30",
     "@types/node": "^7.0.22",
     "@types/node-fetch": "^1.6.7",
     "@types/node-wit": "^4.2.2",

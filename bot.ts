@@ -1,8 +1,10 @@
 import * as child_process from 'child_process';
 import { Wit } from 'node-wit';
 import * as util from 'util';
+import * as path from 'path';
 import fetch from 'node-fetch';
 import * as ical from 'ical.js';
+import * as Loki from 'lokijs';
 
 import { Bot, Message } from './lib/slackbot';
 import * as wit from './lib/wit';
@@ -11,6 +13,7 @@ import * as cal from './lib/cal';
 const BOT_TOKEN = process.env['SLACK_BOT_TOKEN'] || '';
 const WIT_TOKEN = process.env['WIT_ACCESS_TOKEN'] || '';
 const STATUS_CHAN = 'bot-status';
+const DB_NAME = 'store.json';
 
 /**
  * Get the current git revision string for a repository.
@@ -44,13 +47,27 @@ async function interact(message: Message) {
   } else {
     let intent = wit.entityValue(res, "intent");
     if (intent === "show_calendar") {
-      bot.send("let's get your calendar! please paste a URL", chan);
-      let url = (await bot.wait(chan)).text;
-      console.log(`getting calendar at ${url}`);
-      let resp = await fetch(url);
-      let jcal = ical.parse(await resp.text());
-      console.log(jcal);
-      bot.send(`got your calendar!`, chan);
+      bot.send("let's get your calendar!", chan);
+
+      // Do we already have a calendar URL for this user?
+      let user = getUser(message.user);
+      if (user.calendar_url) {
+        let url = user.calendar_url;
+        bot.send(`your calendar URL is ${url}`, chan);
+      } else {
+        bot.send("please paste your calendar URL", chan);
+        let url = (await bot.wait(chan)).text;
+        console.log(`getting calendar at ${url}`);
+        /*
+        let resp = await fetch(url);
+        let jcal = ical.parse(await resp.text());
+        console.log(jcal);
+        */
+        bot.send("thanks!", chan);
+        user.calendar_url = url;
+        users.update(user);
+      }
+
       return;
     } else if (intent === "schedule_meeting") {
       bot.send("let's schedule a meeting!", chan);
@@ -62,11 +79,33 @@ async function interact(message: Message) {
   bot.send(':confused: :grey_question:', chan);
 }
 
+interface User {
+  slack_id: string;
+  calendar_url?: string;
+}
+
+/**
+ * Get a user from the database, or create it if it doesn't exist.
+ */
+function getUser(slack_id: string): User {
+  let user = users.findOne({ slack_id });
+  if (user) {
+    return user as User;
+  } else {
+    let newUser = { slack_id };
+    users.insert(newUser);
+    return newUser;
+  }
+}
+
 const wit_client = new Wit({
   accessToken: WIT_TOKEN,
 });
 
 const bot = new Bot(BOT_TOKEN);
+
+const db = new Loki(path.join(__dirname, DB_NAME));
+const users = db.addCollection("users");
 
 bot.on("ready", async () => {
   console.log(`I'm ${bot.self.name} on ${bot.team.name}`);
