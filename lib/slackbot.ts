@@ -99,6 +99,8 @@ const EVENT_IDS = {
   message: slack_client.RTM_EVENTS.MESSAGE,
 };
 
+type MessageHandler = (message: Message) => void;
+
 export class Bot {
   public rtm: any;
 
@@ -111,7 +113,12 @@ export class Bot {
    * A list of handlers waiting to consume a message from a given channel
    * indicated by its ID.
    */
-  public waiters: [string, (message: Message) => void][] = [];
+  public waiters: [string, MessageHandler][] = [];
+
+  /**
+   * A handler for messages that no one's waiting for.
+   */
+  public initHandler: MessageHandler | null = null;
 
   /**
    * Construct a bot by creating a Slack RTM client object and attach this
@@ -138,7 +145,7 @@ export class Bot {
     this.on("message", (message) => {
       // Get the callbacks for this message and remove them from the list
       // of pending waiters.
-      let callbacks: ((message: Message) => void)[] = [];
+      let callbacks: MessageHandler[] = [];
       this.waiters = this.waiters.filter(([channel_id, callback]) => {
         if (message.channel == channel_id) {
           callbacks.push(callback);
@@ -147,9 +154,18 @@ export class Bot {
         return true;
       });
 
-      // Invoke the callbacks.
-      for (let callback of callbacks) {
-        callback(message);
+      if (callbacks.length) {
+        // Invoke the callbacks.
+        for (let callback of callbacks) {
+          callback(message);
+        }
+      } else {
+        // No one is waiting for this message.
+        if (this.initHandler && this.ims.get(message.channel)) {
+          // This is a private message. (Eventually, we should also handle
+          // mentions.) Call the init handler.
+          this.initHandler(message);
+        }
       }
     });
   }
@@ -194,5 +210,12 @@ export class Bot {
     return new Promise((resolve, reject) => {
       this.waiters.push([channel_id, resolve]);
     });
+  }
+
+  /**
+   * Handle (directed) messages that no one else wants.
+   */
+  onInit(handler: MessageHandler) {
+    this.initHandler = handler;
   }
 }

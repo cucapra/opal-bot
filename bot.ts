@@ -73,12 +73,10 @@ bot.on("ready", async () => {
   }
 });
 
-bot.on("message", async (message) => {
-  // Parse private messages.
-  if (bot.ims.get(message.channel)) {
-    console.log(`${message.user}: ${message.text}`);
-    interact(message);
-  }
+bot.onInit(async (message) => {
+  // A new private message.
+  console.log(`${message.user}: ${message.text}`);
+  interact(message);
 });
 
 bot.start();
