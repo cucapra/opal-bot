@@ -1,6 +1,5 @@
 import * as child_process from 'child_process';
-import { Bot, Message, RTMStartData } from './slackbot';
-const slack_client = require('@slack/client');
+import { Bot, Message } from './slackbot';
 
 const BOT_TOKEN = process.env['SLACK_BOT_TOKEN'] || '';
 const STATUS_CHAN = 'bot-status';
