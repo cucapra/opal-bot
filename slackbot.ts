@@ -131,6 +131,18 @@ export class Bot {
   }
 
   /**
+   * Get a channel by its name, if it exists and we're a member.
+   */
+  channel(name: string): Channel | null {
+    for (let [, channel] of this.channels) {
+      if (channel.name === name && channel.is_member) {
+        return channel;
+      }
+    }
+    return null;
+  }
+
+  /**
    * Send a message.
    */
   send(message: string, channel_id: string) {

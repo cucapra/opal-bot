@@ -23,17 +23,10 @@ let bot = new Bot(bot_token);
 bot.on("ready", () => {
   console.log(`I'm ${bot.self.name} on ${bot.team.name}`);
 
-  // Look for the status channel.
-  let status_channel_id: string | null = null;
-  for (let [id, channel] of bot.channels) {
-    if (channel.name === status_chan && channel.is_member) {
-      status_channel_id = channel.id;
-    }
-  }
-
   // Indicate that we've started.
-  if (status_channel_id) {
-    let cid = status_channel_id;
+  let status_channel = bot.channel(status_chan);
+  if (status_channel) {
+    let cid = status_channel.id;
     git_summary(__dirname).then((commit) => {
       bot.send(`:wave: @ ${commit}`, cid);
     });
