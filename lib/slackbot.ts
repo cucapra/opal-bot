@@ -104,9 +104,14 @@ export class Bot {
 
   public channels: Map<string, Channel> = new Map();
   public ims: Map<string, IM> = new Map();
-  public status_channel_id: string | null = null;
   public team: Team;
   public self: User;
+
+  /**
+   * A list of handlers waiting to consume a message from a given channel
+   * indicated by its ID.
+   */
+  public waiters: [string, (message: Message) => void][] = [];
 
   /**
    * Construct a bot by creating a Slack RTM client object and attach this
@@ -127,6 +132,25 @@ export class Bot {
 
       this.team = startData.team;
       this.self = startData.self;
+    });
+
+    // Event handler for dispatching waited-on messages.
+    this.on("message", (message) => {
+      // Get the callbacks for this message and remove them from the list
+      // of pending waiters.
+      let callbacks: ((message: Message) => void)[] = [];
+      this.waiters = this.waiters.filter(([channel_id, callback]) => {
+        if (message.channel == channel_id) {
+          callbacks.push(callback);
+          return false;
+        }
+        return true;
+      });
+
+      // Invoke the callbacks.
+      for (let callback of callbacks) {
+        callback(message);
+      }
     });
   }
 
@@ -161,5 +185,14 @@ export class Bot {
    */
   on(event: keyof Events, listener: Events[typeof event]) {
     this.rtm.on(EVENT_IDS[event], listener);
+  }
+
+  /**
+   * Wait for a message on a given channel.
+   */
+  wait(channel_id: string): Promise<Message> {
+    return new Promise((resolve, reject) => {
+      this.waiters.push([channel_id, resolve]);
+    });
   }
 }
