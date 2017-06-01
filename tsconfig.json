@@ -3,6 +3,12 @@
         "strict": true,
         "outDir": "build",
         "target": "es6",
-        "module": "commonjs"
+        "module": "commonjs",
+
+        // Custom type declarations for Node modules.
+        "baseUrl": ".",
+        "paths": {
+          "ical.js": ["types/ical.js.d.ts"]
+        }
     }
 }

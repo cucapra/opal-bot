@@ -6,6 +6,7 @@
   "private": true,
   "dependencies": {
     "@slack/client": "^3.10.0",
+    "ical.js": "^1.2.2",
     "node-wit": "^4.2.0"
   },
   "devDependencies": {
