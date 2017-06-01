@@ -1,6 +1,7 @@
 import * as child_process from 'child_process';
 import { Wit } from 'node-wit';
 import * as util from 'util';
+import * as fetch from 'node-fetch';
 
 import { Bot, Message } from './lib/slackbot';
 import * as wit from './lib/wit';
@@ -36,8 +37,10 @@ async function interact(message: string): Promise<string | null> {
     return "hi!";
   } else {
     let intent = wit.entityValue(res, "intent");
-    if (intent) {
-      return `your intent: ${intent}`;
+    if (intent === "show_calendar") {
+      return "let's get your calendar!";
+    } else if (intent === "schedule_meeting") {
+      return "let's schedule a meeting!";
     }
   }
 
