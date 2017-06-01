@@ -2,9 +2,12 @@ import * as child_process from 'child_process';
 import { Bot, Message, RTMStartData } from './slackbot';
 const slack_client = require('@slack/client');
 
-const bot_token = process.env['SLACK_BOT_TOKEN'] || '';
-const status_chan = 'bot-status';
+const BOT_TOKEN = process.env['SLACK_BOT_TOKEN'] || '';
+const STATUS_CHAN = 'bot-status';
 
+/**
+ * Get the current git revision string for a repository.
+ */
 function git_summary(path: string): Promise<string> {
   return new Promise((resolve, reject) => {
     child_process.exec('git rev-parse --short HEAD', { cwd: path },
@@ -18,18 +21,16 @@ function git_summary(path: string): Promise<string> {
   });
 }
 
-let bot = new Bot(bot_token);
+let bot = new Bot(BOT_TOKEN);
 
-bot.on("ready", () => {
+bot.on("ready", async () => {
   console.log(`I'm ${bot.self.name} on ${bot.team.name}`);
 
   // Indicate that we've started.
-  let status_channel = bot.channel(status_chan);
+  let status_channel = bot.channel(STATUS_CHAN);
   if (status_channel) {
-    let cid = status_channel.id;
-    git_summary(__dirname).then((commit) => {
-      bot.send(`:wave: @ ${commit}`, cid);
-    });
+    let commit = await git_summary(__dirname);
+    bot.send(`:wave: @ ${commit}`, status_channel.id);
   }
 });
 
