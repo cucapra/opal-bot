@@ -2,8 +2,8 @@ import * as child_process from 'child_process';
 import { Wit } from 'node-wit';
 import * as util from 'util';
 
-import { Bot, Message } from './slackbot';
-import * as wit from './wit';
+import { Bot, Message } from './lib/slackbot';
+import * as wit from './lib/wit';
 
 const BOT_TOKEN = process.env['SLACK_BOT_TOKEN'] || '';
 const WIT_TOKEN = process.env['WIT_ACCESS_TOKEN'] || '';
