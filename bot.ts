@@ -1,10 +1,12 @@
 import * as child_process from 'child_process';
 import { Wit } from 'node-wit';
 import * as util from 'util';
-import * as fetch from 'node-fetch';
+import fetch from 'node-fetch';
+import * as ical from 'ical.js';
 
 import { Bot, Message } from './lib/slackbot';
 import * as wit from './lib/wit';
+import * as cal from './lib/cal';
 
 const BOT_TOKEN = process.env['SLACK_BOT_TOKEN'] || '';
 const WIT_TOKEN = process.env['WIT_ACCESS_TOKEN'] || '';
@@ -44,7 +46,11 @@ async function interact(message: Message) {
     if (intent === "show_calendar") {
       bot.send("let's get your calendar! please paste a URL", chan);
       let url = (await bot.wait(chan)).text;
-      bot.send(`you pasted: ${url}`, chan);
+      console.log(`getting calendar at ${url}`);
+      let resp = await fetch(url);
+      let jcal = ical.parse(await resp.text());
+      console.log(jcal);
+      bot.send(`got your calendar!`, chan);
       return;
     } else if (intent === "schedule_meeting") {
       bot.send("let's schedule a meeting!", chan);
