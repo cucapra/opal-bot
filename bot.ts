@@ -1,7 +1,9 @@
 import * as child_process from 'child_process';
-import { Bot, Message } from './slackbot';
 import { Wit } from 'node-wit';
 import * as util from 'util';
+
+import { Bot, Message } from './slackbot';
+import * as wit from './wit';
 
 const BOT_TOKEN = process.env['SLACK_BOT_TOKEN'] || '';
 const WIT_TOKEN = process.env['WIT_ACCESS_TOKEN'] || '';
@@ -23,7 +25,7 @@ function git_summary(path: string): Promise<string> {
   });
 }
 
-const wit = new Wit({
+const wit_client = new Wit({
   accessToken: WIT_TOKEN,
 });
 
@@ -40,25 +42,19 @@ bot.on("ready", async () => {
   }
 });
 
-interface Entity {
-  confidence: number;
-  value: string;
-}
-
 bot.on("message", async (message) => {
   // Parse private messages.
   if (bot.ims.get(message.channel)) {
     console.log(`${message.user}: ${message.text}`);
-    let res = await wit.message(message.text, {});
+    let res = await wit_client.message(message.text, {});
     console.log(`Wit parse: ${util.inspect(res, { depth: undefined })}`);
-    for (let name in res.entities) {
-      let entities: Entity[] = res.entities[name];
-      if (name === "greetings") {
-        for (let entity of entities) {
-          if (entity.confidence > 0.9) {
-            bot.send("hi!", message.channel);
-          }
-        }
+
+    if (wit.getEntity(res, "greeting")) {
+      bot.send("hi!", message.channel);
+    } else {
+      let intent = wit.entityValue(res, "intent");
+      if (intent) {
+        bot.send(`your intent: ${intent}`, message.channel);
       }
     }
   }
