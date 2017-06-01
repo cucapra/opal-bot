@@ -1,3 +1,4 @@
+import * as child_process from 'child_process';
 const slack_client = require('@slack/client');
 
 const bot_token = process.env['SLACK_BOT_TOKEN'] || '';
@@ -82,7 +83,6 @@ let status_channel_id: string | null = null;
 // Event handler for successful connection.
 rtm.on(slack_client.CLIENT_EVENTS.RTM.AUTHENTICATED, (startData: RTMStartData) => {
   console.log(`logged in as ${startData.self.name} to ${startData.team.name}`);
-  console.log(startData);
 
   for (let channel of startData.channels) {
     cur_channels[channel.id] = channel;
@@ -99,9 +99,25 @@ rtm.on(slack_client.CLIENT_EVENTS.RTM.AUTHENTICATED, (startData: RTMStartData) =
   }
 });
 
+function git_commit(path: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    child_process.exec('git rev-parse --short HEAD', { cwd: path },
+                       (error, stdout, stderr) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(stdout.trim());
+      }
+    });
+  });
+}
+
 rtm.on(slack_client.CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
+  // Indicate that we've started.
   if (status_channel_id) {
-    rtm.sendMessage(':wave:', status_channel_id);
+    git_commit(__dirname).then((commit) => {
+      rtm.sendMessage(`:wave: @ ${commit}`, status_channel_id);
+    });
   }
 });
 
