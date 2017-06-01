@@ -89,6 +89,8 @@ export class Bot {
   public channels: Map<string, Channel> = new Map();
   public ims: Map<string, IM> = new Map();
   public status_channel_id: string | null = null;
+  public team: Team;
+  public self: User;
 
   /**
    * Construct a bot by creating a Slack RTM client object and attach this
@@ -106,6 +108,9 @@ export class Bot {
       for (let im of startData.ims) {
         this.ims.set(im.id, im);
       }
+
+      this.team = startData.team;
+      this.self = startData.self;
     });
   }
 

@@ -5,14 +5,6 @@ const slack_client = require('@slack/client');
 const bot_token = process.env['SLACK_BOT_TOKEN'] || '';
 const status_chan = 'bot-status';
 
-let bot = new Bot(bot_token);
-
-// Event handler for successful connection.
-bot.rtm.on(slack_client.CLIENT_EVENTS.RTM.AUTHENTICATED, (startData: RTMStartData) => {
-  console.log(`logged in as ${startData.self.name} to ${startData.team.name}`);
-
-});
-
 function git_summary(path: string): Promise<string> {
   return new Promise((resolve, reject) => {
     child_process.exec('git rev-parse --short HEAD', { cwd: path },
@@ -26,7 +18,11 @@ function git_summary(path: string): Promise<string> {
   });
 }
 
+let bot = new Bot(bot_token);
+
 bot.rtm.on(slack_client.CLIENT_EVENTS.RTM.RTM_CONNECTION_OPENED, () => {
+  console.log(`I'm ${bot.self.name} on ${bot.team.name}`);
+
   // Look for the status channel.
   let status_channel_id: string | null = null;
   for (let [id, channel] of bot.channels) {
