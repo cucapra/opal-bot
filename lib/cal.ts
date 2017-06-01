@@ -3,7 +3,7 @@ import * as ical from 'ical.js';
 /**
  * Generate all the Events in a calendar.
  */
-function* get_events(jcal: any): Iterable<ical.Event> {
+function* getEvents(jcal: any): Iterable<ical.Event> {
   let comp = new ical.Component(jcal);
   for (let vevent of comp.getAllSubcomponents('vevent')) {
     yield new ical.Event(vevent);
@@ -15,7 +15,8 @@ function* get_events(jcal: any): Iterable<ical.Event> {
  * both repeating and non-repeating events: non-repeating events just have
  * a single "occurrence."
  */
-function* get_event_ocurrences(event: ical.Event, start: ical.Time, end: ical.Time) {
+function* eventOcurrences(event: ical.Event,
+                          start: ical.Time, end: ical.Time) {
   if (event.isRecurring()) {
     // Multiple occurrences.
     let it = event.iterator();
