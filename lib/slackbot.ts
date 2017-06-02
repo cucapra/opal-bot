@@ -100,7 +100,37 @@ const EVENT_IDS = {
 };
 
 type MessageHandler = (message: Message) => void;
+type ConversationHandler = (message: string, conv: Conversation) => void;
 
+/**
+ * Encapsulates methods for interacting in the scope of a specific channel
+ * with a specific user.
+ */
+export class Conversation {
+  constructor(
+    public slack: SlackBot,
+    public chanId: string,
+    public userId: string,
+  ) {}
+
+  /**
+   * Send a message in the conversation.
+   */
+  send(text: string) {
+    this.slack.send(text, this.chanId);
+  }
+
+  /**
+   * Receive a message in this conversation.
+   */
+  async recv() {
+    return (await this.slack.wait(this.chanId)).text;
+  }
+}
+
+/**
+ * Wraps a Slack client for bot-like interactions.
+ */
 export class SlackBot {
   public rtm: any;
 
@@ -118,7 +148,7 @@ export class SlackBot {
   /**
    * A handler for messages that no one's waiting for.
    */
-  public initHandler: MessageHandler | null = null;
+  public convHandler: ConversationHandler | null = null;
 
   /**
    * Construct a bot by creating a Slack RTM client object and attach this
@@ -161,10 +191,13 @@ export class SlackBot {
         }
       } else {
         // No one is waiting for this message.
-        if (this.initHandler && this.ims.get(message.channel)) {
+        if (this.convHandler && this.ims.get(message.channel)) {
           // This is a private message. (Eventually, we should also handle
-          // mentions.) Call the init handler.
-          this.initHandler(message);
+          // mentions.) Call the conversation handler.
+          this.convHandler(
+            message.text,
+            new Conversation(this, message.channel, message.user)
+          );
         }
       }
     });
@@ -215,7 +248,7 @@ export class SlackBot {
   /**
    * Handle (directed) messages that no one else wants.
    */
-  onInit(handler: MessageHandler) {
-    this.initHandler = handler;
+  onConverse(handler: ConversationHandler) {
+    this.convHandler = handler;
   }
 }

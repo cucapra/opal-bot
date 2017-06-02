@@ -3,7 +3,7 @@
  */
 
 import * as util from 'util';
-import { SlackBot, Message } from './slackbot';
+import { SlackBot, Message, Conversation } from './slackbot';
 import { Wit } from 'node-wit';
 import * as wit from './wit';
 
@@ -15,32 +15,6 @@ import { findURL, gitSummary } from './util';
 interface User {
   slack_id: string;
   calendar_url?: string;
-}
-
-/**
- * Encapsulates methods for interacting in the scope of a specific channel
- * with a specific user.
- */
-class Conversation {
-  constructor(
-    public bot: OpalBot,
-    public chanId: string,
-    public userId: string,
-  ) {}
-
-  /**
-   * Send a message in the conversation.
-   */
-  send(text: string) {
-    this.bot.slack.send(text, this.chanId);
-  }
-
-  /**
-   * Receive a message in this conversation.
-   */
-  async recv() {
-    return (await this.bot.slack.wait(this.chanId)).text;
-  }
 }
 
 /**
@@ -65,12 +39,9 @@ export class OpalBot {
       this.ready();
     });
 
-    // Handle new messages.
-    slack.onInit(async (message) => {
-      // A new private message.
-      console.log(`${message.user}: ${message.text}`);
-      this.interact(message.text,
-                    new Conversation(this, message.channel, message.user));
+    // Handle new conversations.
+    slack.onConverse(async (text, conv) => {
+      await this.interact(text, conv);
     });
   }
 
@@ -124,7 +95,7 @@ export class OpalBot {
   }
 
   /**
-   * Handle a direct interaction.
+   * Handle a new conversation by dispatching based on intent.
    */
   async interact(text: string, conv: Conversation) {
     let res = await this.wit.message(text, {});
