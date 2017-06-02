@@ -68,12 +68,15 @@ async function main() {
   const users = db.getCollection("users") || db.addCollection("users");
 
   /**
-   * Interact with the user to get their calendar URL.
+   * Interact with the user to get their calendar URL. If the user doesn't
+   * have a URL yet, or if `force` is specified, ask them for one.
    */
-  async function getCalendarURL(userId: string, chan: string): Promise<string | null> {
+  async function getCalendarURL(userId: string,
+                                chan: string,
+                                force = false): Promise<string | null> {
     // Do we already have a calendar URL for this user?
     let user = getUser(userId);
-    if (user.calendar_url) {
+    if (!force && user.calendar_url) {
       return user.calendar_url;
     }
 
@@ -121,6 +124,12 @@ async function main() {
         return;
       } else if (intent === "schedule_meeting") {
         bot.send("let's schedule a meeting!", chan);
+        return;
+      } else if (intent === "setup_calendar") {
+        let url = await getCalendarURL(message.user, chan, true);
+        if (url) {
+          bot.send("ok, we're all set!", chan);
+        }
         return;
       }
     }
