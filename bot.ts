@@ -1,4 +1,4 @@
-import * as child_process from 'child_process';
+
 import { Wit } from 'node-wit';
 import * as util from 'util';
 import * as path from 'path';
@@ -6,50 +6,15 @@ import fetch from 'node-fetch';
 import * as ical from 'ical.js';
 import * as Loki from 'lokijs';
 
-const urlRegex: RegExp = require('url-regex')();
-
 import { Bot, Message } from './lib/slackbot';
 import * as wit from './lib/wit';
 import * as cal from './lib/cal';
+import { findURL, gitSummary } from './lib/util';
 
 const BOT_TOKEN = process.env['SLACK_BOT_TOKEN'] || '';
 const WIT_TOKEN = process.env['WIT_ACCESS_TOKEN'] || '';
 const STATUS_CHAN = 'bot-status';
 const DB_NAME = 'store.json';
-
-/**
- * Get the current git revision string for a repository.
- */
-function git_summary(path: string): Promise<string> {
-  return new Promise((resolve, reject) => {
-    child_process.exec('git rev-parse --short HEAD', { cwd: path },
-                       (error, stdout, stderr) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(stdout.trim());
-      }
-    });
-  });
-}
-
-/**
- * Extract a URL from a string, if any.
- */
-function findURL(s: string): string | null {
-  let matches = s.match(urlRegex);
-  if (matches && matches.length) {
-    let url = matches[0];
-    // The regex is too dumb to remove trailing )s and >s.
-    // https://github.com/kevva/url-regex/issues/34
-    if (url.endsWith('>')) {
-      url = url.slice(0, -1);
-    }
-    return url;
-  } else {
-    return null;
-  }
-}
 
 interface User {
   slack_id: string;
@@ -168,7 +133,7 @@ async function main() {
     // Indicate that we've started.
     let status_channel = bot.channel(STATUS_CHAN);
     if (status_channel) {
-      let commit = await git_summary(__dirname);
+      let commit = await gitSummary(__dirname);
       bot.send(`:wave: @ ${commit}`, status_channel.id);
     }
   });
