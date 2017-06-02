@@ -95,46 +95,83 @@ export class OpalBot {
   }
 
   /**
+   * Conversation with a greeting intent.
+   */
+  async handle_greeting(conv: Conversation) {
+    conv.send("hi!");
+  }
+
+  /**
+   * Conversation where the user wants to see their calendar.
+   */
+  async handle_show_calendar(conv: Conversation) {
+    conv.send("let's get your calendar!");
+    let url = await this.getCalendarURL(conv);
+    if (url) {
+      conv.send(`your calendar URL is ${url}`);
+      /*
+      let resp = await fetch(url);
+      let jcal = ical.parse(await resp.text());
+      console.log(jcal);
+      */
+    }
+  }
+
+  /**
+   * Conversation where the user wants to schedule a meeting.
+   */
+  async handle_schedule_meeting(conv: Conversation) {
+    conv.send("let's schedule a meeting!");
+  }
+
+  /**
+   * Conversation where the user wants to set up their calendar settings.
+   */
+  async handle_setup_calendar(conv: Conversation) {
+    let url = await this.getCalendarURL(conv, true);
+    if (url) {
+      conv.send("ok, we're all set!");
+    }
+  }
+
+  /**
+   * Conversation where the user asks for help using the bot.
+   */
+  async handle_help(conv: Conversation) {
+    conv.send("I can schedule a meeting or show your calendar");
+  }
+
+  /**
+   * Called when a conversation has a missing or unrecongized intent.
+   */
+  async handle_default(conv: Conversation) {
+    conv.send(':confused: :grey_question:');
+  }
+
+  /**
    * Handle a new conversation by dispatching based on intent.
    */
   async interact(text: string, conv: Conversation) {
     let res = await this.wit.message(text, {});
     console.log(`Wit parse: ${util.inspect(res, { depth: undefined })}`);
 
+    let unhandled = false;
     if (wit.getEntity(res, "greetings")) {
-      conv.send("hi!");
-      return;
+      await this.handle_greeting(conv);
     } else {
       let intent = wit.entityValue(res, "intent");
       if (intent === "show_calendar") {
-        conv.send("let's get your calendar!");
-        let url = await this.getCalendarURL(conv);
-        if (url) {
-          conv.send(`your calendar URL is ${url}`);
-          /*
-          let resp = await fetch(url);
-          let jcal = ical.parse(await resp.text());
-          console.log(jcal);
-          */
-        }
-        return;
+        await this.handle_show_calendar(conv);
       } else if (intent === "schedule_meeting") {
-        conv.send("let's schedule a meeting!");
-        return;
+        await this.handle_schedule_meeting(conv);
       } else if (intent === "setup_calendar") {
-        let url = await this.getCalendarURL(conv, true);
-        if (url) {
-          conv.send("ok, we're all set!");
-        }
-        return;
+        await this.handle_setup_calendar(conv);
       } else if (intent === "help") {
-        conv.send("I can schedule a meeting or show your calendar");
-        return;
+        await this.handle_help(conv);
+      } else {
+        await this.handle_default(conv);
       }
     }
-
-    // Unhandled message.
-    conv.send(':confused: :grey_question:');
   }
 
   /**
