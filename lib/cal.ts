@@ -1,11 +1,18 @@
 import * as ical from 'ical.js';
 
 /**
+ * Parse the first component from an iCal document. Can raise a ParseError.
+ */
+export function parse(s: string): ical.Component {
+  let jcal = ical.parse(s);
+  return new ical.Component(jcal as any);
+}
+
+/**
  * Generate all the Events in a calendar.
  */
-function* getEvents(jcal: any): Iterable<ical.Event> {
-  let comp = new ical.Component(jcal);
-  for (let vevent of comp.getAllSubcomponents('vevent')) {
+export function* getEvents(cal: ical.Component): Iterable<ical.Event> {
+  for (let vevent of cal.getAllSubcomponents('vevent')) {
     yield new ical.Event(vevent);
   }
 }
@@ -15,8 +22,8 @@ function* getEvents(jcal: any): Iterable<ical.Event> {
  * both repeating and non-repeating events: non-repeating events just have
  * a single "occurrence."
  */
-function* eventOcurrences(event: ical.Event,
-                          start: ical.Time, end: ical.Time) {
+export function* eventOcurrences(event: ical.Event,
+                                 start: ical.Time, end: ical.Time) {
   if (event.isRecurring()) {
     // Multiple occurrences.
     let it = event.iterator();
@@ -35,6 +42,20 @@ function* eventOcurrences(event: ical.Event,
     if (event.endDate.compare(start) !== -1  // endDate >= start
         && event.startDate.compare(end) !== 1) {  // startDate <= end
       yield event.startDate;
+    }
+  }
+}
+
+/**
+ * Generate event/start-time pairs for all the occurrenes of all the events
+ * in a calendar in a given range.
+ */
+export function* getOccurrences(cal: ical.Component, start: ical.Time, end: ical.Time):
+  Iterable<[ical.Event, ical.Time]>
+{
+  for (let event of getEvents(cal)) {
+    for (let tm of eventOcurrences(event, start, end)) {
+      yield [event, tm];
     }
   }
 }

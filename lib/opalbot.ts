@@ -7,7 +7,11 @@ import { SlackBot, Message, Conversation } from './slackbot';
 import { Wit } from 'node-wit';
 import * as wit from './wit';
 
+import * as ical from 'ical.js';
+import fetch from 'node-fetch';
+
 import { findURL, gitSummary } from './util';
+import * as cal from './cal';
 
 /**
  * Our data model for keeping track of users' data.
@@ -15,6 +19,30 @@ import { findURL, gitSummary } from './util';
 interface User {
   slack_id: string;
   calendar_url?: string;
+}
+
+/**
+ * Get some events from a calendar at a given URL. This is currently
+ * disastrously inefficient; it downloads and parses the whole calendar
+ * every time.
+ */
+async function fetchEvents(url: string) {
+  let resp = await fetch(url);
+  let calendar = cal.parse(await resp.text());
+
+  // Get the bounds of the current week.
+  let day = ical.Time.now();
+  let start = day.startOfWeek();
+  let end = day.endOfWeek();
+  end.adjust(1, 0, 0, 0);  // "One past the end" for iteration.
+
+  // Get events in the range.
+  let out = "";
+  for (let [event, time] of cal.getOccurrences(calendar, start, end)) {
+    let details = event.getOccurrenceDetails(time);
+    out +=  details.startDate.toString() + " " + event.summary + "\n";
+  }
+  return out.trim();
 }
 
 /**
@@ -108,12 +136,8 @@ export class OpalBot {
     conv.send("let's get your calendar!");
     let url = await this.getCalendarURL(conv);
     if (url) {
-      conv.send(`your calendar URL is ${url}`);
-      /*
-      let resp = await fetch(url);
-      let jcal = ical.parse(await resp.text());
-      console.log(jcal);
-      */
+      let agenda = await fetchEvents(url);
+      conv.send(agenda);
     }
   }
 

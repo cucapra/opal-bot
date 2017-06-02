@@ -1,11 +1,8 @@
 
 import { Wit } from 'node-wit';
-import fetch from 'node-fetch';
-import * as ical from 'ical.js';
 import * as Loki from 'lokijs';
 
-import { SlackBot, Message } from './lib/slackbot';
-import * as cal from './lib/cal';
+import { SlackBot } from './lib/slackbot';
 import { OpalBot } from './lib/opalbot';
 
 const BOT_TOKEN = process.env['SLACK_BOT_TOKEN'] || '';
