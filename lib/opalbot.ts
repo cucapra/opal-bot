@@ -130,6 +130,20 @@ export class OpalBot {
   }
 
   /**
+   * Conversation where the user says goodbye.
+   */
+  async handle_bye(conv: Conversation) {
+    conv.send(":wave: I'll be right here");
+  }
+
+  /**
+   * Conversation where the user says thanks.
+   */
+  async handle_thanks(conv: Conversation) {
+    conv.send("nbd yo");
+  }
+
+  /**
    * Conversation where the user wants to see their calendar.
    */
   async handle_show_calendar(conv: Conversation) {
@@ -182,6 +196,10 @@ export class OpalBot {
     let unhandled = false;
     if (wit.getEntity(res, "greetings")) {
       await this.handle_greeting(conv);
+    } else if (wit.getEntity(res, "bye")) {
+      await this.handle_bye(conv);
+    } else if (wit.getEntity(res, "thanks")) {
+      await this.handle_thanks(conv);
     } else {
       let intent = wit.entityValue(res, "intent");
       if (intent === "show_calendar") {
