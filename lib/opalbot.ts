@@ -21,9 +21,31 @@ export class OpalBot {
     public slack: SlackBot,
     public wit: Wit,
     public db: Loki,
+    public statusChan: string,
   ) {
+    // Get or create a database collection for users.
     this.users = (db.getCollection("users") ||
       db.addCollection("users")) as LokiCollection<User>;
+
+    // Handle Slack connection.
+    slack.on("ready", async () => {
+      console.log(`I'm ${slack.self.name} on ${slack.team.name}`);
+      this.ready();
+    });
+
+    // Handle new messages.
+    slack.onInit(async (message) => {
+      // A new private message.
+      console.log(`${message.user}: ${message.text}`);
+      this.interact(message);
+    });
+  }
+
+  /**
+   * Connect to Slack to bring up the bot.
+   */
+  start() {
+    this.slack.start();
   }
 
   /**
@@ -113,5 +135,17 @@ export class OpalBot {
 
     // Unhandled message.
     this.slack.send(':confused: :grey_question:', chan);
+  }
+
+  /**
+   * Called when we're connected to Slack.
+   */
+  async ready() {
+    // Say hi.
+    let status_channel = this.slack.channel(this.statusChan);
+    if (status_channel) {
+      let commit = await gitSummary(__dirname);
+      this.slack.send(`:wave: @ ${commit}`, status_channel.id);
+    }
   }
 }
