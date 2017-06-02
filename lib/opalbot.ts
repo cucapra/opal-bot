@@ -9,11 +9,43 @@ import * as wit from './wit';
 
 import { findURL, gitSummary } from './util';
 
+/**
+ * Our data model for keeping track of users' data.
+ */
 interface User {
   slack_id: string;
   calendar_url?: string;
 }
 
+/**
+ * Encapsulates methods for interacting in the scope of a specific channel
+ * with a specific user.
+ */
+class Conversation {
+  constructor(
+    public bot: OpalBot,
+    public chanId: string,
+    public userId: string,
+  ) {}
+
+  /**
+   * Send a message in the conversation.
+   */
+  send(text: string) {
+    this.bot.slack.send(text, this.chanId);
+  }
+
+  /**
+   * Receive a message in this conversation.
+   */
+  async recv() {
+    return (await this.bot.slack.wait(this.chanId)).text;
+  }
+}
+
+/**
+ * The main logic for the Opal bot.
+ */
 export class OpalBot {
   public users: LokiCollection<User>;
 
@@ -37,7 +69,8 @@ export class OpalBot {
     slack.onInit(async (message) => {
       // A new private message.
       console.log(`${message.user}: ${message.text}`);
-      this.interact(message);
+      this.interact(message.text,
+                    new Conversation(this, message.channel, message.user));
     });
   }
 
@@ -67,18 +100,17 @@ export class OpalBot {
    * Interact with the user to get their calendar URL. If the user doesn't
    * have a URL yet, or if `force` is specified, ask them for one.
    */
-  async getCalendarURL(userId: string,
-                       chan: string,
+  async getCalendarURL(conv: Conversation,
                        force = false): Promise<string | null> {
     // Do we already have a calendar URL for this user?
-    let user = this.getUser(userId);
+    let user = this.getUser(conv.userId);
     if (!force && user.calendar_url) {
       return user.calendar_url;
     }
 
     // Query the user.
-    this.slack.send("please paste your calendar URL", chan);
-    let url = findURL((await this.slack.wait(chan)).text);
+    conv.send("please paste your calendar URL");
+    let url = findURL(await conv.recv());
     if (url) {
       console.log(`setting calendar URL to ${url}`);
       user.calendar_url = url;
@@ -86,7 +118,7 @@ export class OpalBot {
       this.db.saveDatabase();
       return url;
     } else {
-      this.slack.send("hmm... that doesn't look like a URL", chan);
+      conv.send("hmm... that doesn't look like a URL");
       return null;
     }
   }
@@ -94,23 +126,20 @@ export class OpalBot {
   /**
    * Handle a direct interaction.
    */
-  async interact(message: Message) {
-    let text = message.text;
-    let chan = message.channel;
-
+  async interact(text: string, conv: Conversation) {
     let res = await this.wit.message(text, {});
     console.log(`Wit parse: ${util.inspect(res, { depth: undefined })}`);
 
     if (wit.getEntity(res, "greetings")) {
-      this.slack.send("hi!", chan);
+      conv.send("hi!");
       return;
     } else {
       let intent = wit.entityValue(res, "intent");
       if (intent === "show_calendar") {
-        this.slack.send("let's get your calendar!", chan);
-        let url = await this.getCalendarURL(message.user, chan);
+        conv.send("let's get your calendar!");
+        let url = await this.getCalendarURL(conv);
         if (url) {
-          this.slack.send(`your calendar URL is ${url}`, chan);
+          conv.send(`your calendar URL is ${url}`);
           /*
           let resp = await fetch(url);
           let jcal = ical.parse(await resp.text());
@@ -119,22 +148,22 @@ export class OpalBot {
         }
         return;
       } else if (intent === "schedule_meeting") {
-        this.slack.send("let's schedule a meeting!", chan);
+        conv.send("let's schedule a meeting!");
         return;
       } else if (intent === "setup_calendar") {
-        let url = await this.getCalendarURL(message.user, chan, true);
+        let url = await this.getCalendarURL(conv, true);
         if (url) {
-          this.slack.send("ok, we're all set!", chan);
+          conv.send("ok, we're all set!");
         }
         return;
       } else if (intent === "help") {
-        this.slack.send("I can schedule a meeting or show your calendar", chan);
+        conv.send("I can schedule a meeting or show your calendar");
         return;
       }
     }
 
     // Unhandled message.
-    this.slack.send(':confused: :grey_question:', chan);
+    conv.send(':confused: :grey_question:');
   }
 
   /**
