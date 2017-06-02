@@ -137,6 +137,9 @@ async function main() {
           bot.send("ok, we're all set!", chan);
         }
         return;
+      } else if (intent === "help") {
+        bot.send("I can schedule a meeting or show your calendar", chan);
+        return;
       }
     }
 
