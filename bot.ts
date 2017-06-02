@@ -6,6 +6,8 @@ import fetch from 'node-fetch';
 import * as ical from 'ical.js';
 import * as Loki from 'lokijs';
 
+const urlRegex: RegExp = require('url-regex')();
+
 import { Bot, Message } from './lib/slackbot';
 import * as wit from './lib/wit';
 import * as cal from './lib/cal';
@@ -29,6 +31,18 @@ function git_summary(path: string): Promise<string> {
       }
     });
   });
+}
+
+/**
+ * Extract a URL from a string, if any.
+ */
+function findURL(s: string): string | null {
+  let matches = s.match(urlRegex);
+  if (matches && matches.length) {
+    return matches[0];
+  } else {
+    return null;
+  }
 }
 
 interface User {
@@ -79,17 +93,21 @@ async function main() {
           bot.send(`your calendar URL is ${url}`, chan);
         } else {
           bot.send("please paste your calendar URL", chan);
-          let url = (await bot.wait(chan)).text;
-          console.log(`getting calendar at ${url}`);
-          /*
-          let resp = await fetch(url);
-          let jcal = ical.parse(await resp.text());
-          console.log(jcal);
-          */
-          bot.send("thanks!", chan);
-          user.calendar_url = url;
-          users.update(user);
-          db.saveDatabase();
+          let url = findURL((await bot.wait(chan)).text);
+          if (url) {
+            console.log(`getting calendar at ${url}`);
+            /*
+            let resp = await fetch(url);
+            let jcal = ical.parse(await resp.text());
+            console.log(jcal);
+            */
+            bot.send("thanks!", chan);
+            user.calendar_url = url;
+            users.update(user);
+            db.saveDatabase();
+          } else {
+            bot.send("hmm... that doesn't look like a URL", chan);
+          }
         }
 
         return;
