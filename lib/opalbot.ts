@@ -67,9 +67,9 @@ export class OpalBot {
    * Interact with the user to get their calendar URL. If the user doesn't
    * have a URL yet, or if `force` is specified, ask them for one.
    */
-  async  getCalendarURL(userId: string,
-                        chan: string,
-                        force = false): Promise<string | null> {
+  async getCalendarURL(userId: string,
+                       chan: string,
+                       force = false): Promise<string | null> {
     // Do we already have a calendar URL for this user?
     let user = this.getUser(userId);
     if (!force && user.calendar_url) {
