@@ -39,7 +39,13 @@ function git_summary(path: string): Promise<string> {
 function findURL(s: string): string | null {
   let matches = s.match(urlRegex);
   if (matches && matches.length) {
-    return matches[0];
+    let url = matches[0];
+    // The regex is too dumb to remove trailing )s and >s.
+    // https://github.com/kevva/url-regex/issues/34
+    if (url.endsWith('>')) {
+      url = url.slice(0, -1);
+    }
+    return url;
   } else {
     return null;
   }
