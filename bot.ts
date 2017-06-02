@@ -68,6 +68,31 @@ async function main() {
   const users = db.getCollection("users") || db.addCollection("users");
 
   /**
+   * Interact with the user to get their calendar URL.
+   */
+  async function getCalendarURL(userId: string, chan: string): Promise<string | null> {
+    // Do we already have a calendar URL for this user?
+    let user = getUser(userId);
+    if (user.calendar_url) {
+      return user.calendar_url;
+    }
+
+    // Query the user.
+    bot.send("please paste your calendar URL", chan);
+    let url = findURL((await bot.wait(chan)).text);
+    if (url) {
+      console.log(`setting calendar URL to ${url}`);
+      user.calendar_url = url;
+      users.update(user);
+      db.saveDatabase();
+      return url;
+    } else {
+      bot.send("hmm... that doesn't look like a URL", chan);
+      return null;
+    }
+  }
+
+  /**
    * Handle a direct interaction.
    */
   async function interact(message: Message) {
@@ -84,32 +109,15 @@ async function main() {
       let intent = wit.entityValue(res, "intent");
       if (intent === "show_calendar") {
         bot.send("let's get your calendar!", chan);
-
-        // Do we already have a calendar URL for this user?
-        let user = getUser(message.user);
-        console.log("user is", user);
-        if (user.calendar_url) {
-          let url = user.calendar_url;
+        let url = await getCalendarURL(message.user, chan);
+        if (url) {
           bot.send(`your calendar URL is ${url}`, chan);
-        } else {
-          bot.send("please paste your calendar URL", chan);
-          let url = findURL((await bot.wait(chan)).text);
-          if (url) {
-            console.log(`getting calendar at ${url}`);
-            /*
-            let resp = await fetch(url);
-            let jcal = ical.parse(await resp.text());
-            console.log(jcal);
-            */
-            bot.send("thanks!", chan);
-            user.calendar_url = url;
-            users.update(user);
-            db.saveDatabase();
-          } else {
-            bot.send("hmm... that doesn't look like a URL", chan);
-          }
+          /*
+          let resp = await fetch(url);
+          let jcal = ical.parse(await resp.text());
+          console.log(jcal);
+          */
         }
-
         return;
       } else if (intent === "schedule_meeting") {
         bot.send("let's schedule a meeting!", chan);
