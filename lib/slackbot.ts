@@ -101,7 +101,7 @@ const EVENT_IDS = {
 
 type MessageHandler = (message: Message) => void;
 
-export class Bot {
+export class SlackBot {
   public rtm: any;
 
   public channels: Map<string, Channel> = new Map();

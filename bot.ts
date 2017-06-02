@@ -1,26 +1,22 @@
 
 import { Wit } from 'node-wit';
-import * as util from 'util';
-import * as path from 'path';
 import fetch from 'node-fetch';
 import * as ical from 'ical.js';
 import * as Loki from 'lokijs';
 
-import { Bot, Message } from './lib/slackbot';
-import * as wit from './lib/wit';
+import { SlackBot, Message } from './lib/slackbot';
 import * as cal from './lib/cal';
-import { findURL, gitSummary } from './lib/util';
+import { gitSummary } from './lib/util';
+import { OpalBot } from './lib/opalbot';
 
 const BOT_TOKEN = process.env['SLACK_BOT_TOKEN'] || '';
 const WIT_TOKEN = process.env['WIT_ACCESS_TOKEN'] || '';
 const STATUS_CHAN = 'bot-status';
 const DB_NAME = 'store.json';
 
-interface User {
-  slack_id: string;
-  calendar_url?: string;
-}
-
+/**
+ * Open a Loki database and load its contents.
+ */
 function openDB(): Promise<Loki> {
   return new Promise((resolve, reject) => {
     let db = new Loki(DB_NAME);
@@ -28,123 +24,41 @@ function openDB(): Promise<Loki> {
   });
 }
 
-const wit_client = new Wit({
-  accessToken: WIT_TOKEN,
-});
-
-const bot = new Bot(BOT_TOKEN);
-
 async function main() {
-  const db = await openDB();
-  const users = db.getCollection("users") || db.addCollection("users");
+  // Set up wit.ai client.
+  let wit_client = new Wit({
+    accessToken: WIT_TOKEN,
+  });
 
-  /**
-   * Interact with the user to get their calendar URL. If the user doesn't
-   * have a URL yet, or if `force` is specified, ask them for one.
-   */
-  async function getCalendarURL(userId: string,
-                                chan: string,
-                                force = false): Promise<string | null> {
-    // Do we already have a calendar URL for this user?
-    let user = getUser(userId);
-    if (!force && user.calendar_url) {
-      return user.calendar_url;
-    }
+  // Set up Slack client.
+  let slack = new SlackBot(BOT_TOKEN);
 
-    // Query the user.
-    bot.send("please paste your calendar URL", chan);
-    let url = findURL((await bot.wait(chan)).text);
-    if (url) {
-      console.log(`setting calendar URL to ${url}`);
-      user.calendar_url = url;
-      users.update(user);
-      db.saveDatabase();
-      return url;
-    } else {
-      bot.send("hmm... that doesn't look like a URL", chan);
-      return null;
-    }
-  }
-
-  /**
-   * Handle a direct interaction.
-   */
-  async function interact(message: Message) {
-    let text = message.text;
-    let chan = message.channel;
-
-    let res = await wit_client.message(text, {});
-    console.log(`Wit parse: ${util.inspect(res, { depth: undefined })}`);
-
-    if (wit.getEntity(res, "greetings")) {
-      bot.send("hi!", chan);
-      return;
-    } else {
-      let intent = wit.entityValue(res, "intent");
-      if (intent === "show_calendar") {
-        bot.send("let's get your calendar!", chan);
-        let url = await getCalendarURL(message.user, chan);
-        if (url) {
-          bot.send(`your calendar URL is ${url}`, chan);
-          /*
-          let resp = await fetch(url);
-          let jcal = ical.parse(await resp.text());
-          console.log(jcal);
-          */
-        }
-        return;
-      } else if (intent === "schedule_meeting") {
-        bot.send("let's schedule a meeting!", chan);
-        return;
-      } else if (intent === "setup_calendar") {
-        let url = await getCalendarURL(message.user, chan, true);
-        if (url) {
-          bot.send("ok, we're all set!", chan);
-        }
-        return;
-      } else if (intent === "help") {
-        bot.send("I can schedule a meeting or show your calendar", chan);
-        return;
-      }
-    }
-
-    // Unhandled message.
-    bot.send(':confused: :grey_question:', chan);
-  }
-
-  /**
-   * Get a user from the database, or create it if it doesn't exist.
-   */
-  function getUser(slack_id: string): User {
-    let user = users.findOne({ slack_id }) as User;
-    if (user) {
-      return user;
-    } else {
-      let newUser = { slack_id };
-      users.insert(newUser);
-      db.saveDatabase();
-      return newUser;
-    }
-  }
-
-  bot.on("ready", async () => {
-    console.log(`I'm ${bot.self.name} on ${bot.team.name}`);
+  slack.on("ready", async () => {
+    console.log(`I'm ${slack.self.name} on ${slack.team.name}`);
 
     // Indicate that we've started.
-    let status_channel = bot.channel(STATUS_CHAN);
+    let status_channel = slack.channel(STATUS_CHAN);
     if (status_channel) {
       let commit = await gitSummary(__dirname);
-      bot.send(`:wave: @ ${commit}`, status_channel.id);
+      slack.send(`:wave: @ ${commit}`, status_channel.id);
     }
   });
 
-  bot.onInit(async (message) => {
+  // Handle new messages.
+  slack.onInit(async (message) => {
     // A new private message.
     console.log(`${message.user}: ${message.text}`);
-    interact(message);
+    bot.interact(message);
   });
 
-  bot.start();
+  // Set up database.
+  let db = await openDB();
+
+  // The main logic goes here.
+  let bot = new OpalBot(slack, wit_client, db);
+
+  // Connect to Slack.
+  slack.start();
 }
 
 main();
