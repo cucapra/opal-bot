@@ -3,7 +3,8 @@
  */
 
 import * as util from 'util';
-import { SlackBot, Message, Conversation } from './slackbot';
+import { SlackBot, Message } from './slackbot';
+import { Conversation } from './basebot';
 import { Wit } from 'node-wit';
 import * as wit from './wit';
 
@@ -185,7 +186,7 @@ export class OpalBot {
   }
 
   /**
-   * Called when a conversation has a missing or unrecongized intent.
+   * Called when a conversation has a missing or unrecognized intent.
    */
   async handle_default(conv: Conversation) {
     conv.send(':confused: :grey_question:');

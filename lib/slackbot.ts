@@ -3,6 +3,7 @@
  */
 
 const slack_client = require('@slack/client');
+import * as basebot from './basebot';
 
 export interface User {
   id: string;
@@ -106,7 +107,7 @@ type ConversationHandler = (message: string, conv: Conversation) => void;
  * Encapsulates methods for interacting in the scope of a specific channel
  * with a specific user.
  */
-export class Conversation {
+export class Conversation implements basebot.Conversation {
   constructor(
     public slack: SlackBot,
     public chanId: string,
