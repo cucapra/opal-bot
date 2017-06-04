@@ -23,3 +23,10 @@ export interface Conversation {
    */
   who(): [string, string];
 }
+
+/**
+ * Conversation handlers get an initial message and an object to represent
+ * the continuing conversation.
+ */
+export type ConversationHandler =
+  (message: string, conv: Conversation) => void;

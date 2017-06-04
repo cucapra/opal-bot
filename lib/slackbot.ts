@@ -101,7 +101,6 @@ const EVENT_IDS = {
 };
 
 type MessageHandler = (message: Message) => void;
-type ConversationHandler = (message: string, conv: Conversation) => void;
 
 /**
  * Encapsulates methods for interacting in the scope of a specific channel
@@ -156,7 +155,7 @@ export class SlackBot {
   /**
    * A handler for messages that no one's waiting for.
    */
-  public convHandler: ConversationHandler | null = null;
+  public convHandler: basebot.ConversationHandler | null = null;
 
   /**
    * Construct a bot by creating a Slack RTM client object and attach this
@@ -256,7 +255,7 @@ export class SlackBot {
   /**
    * Handle (directed) messages that no one else wants.
    */
-  onConverse(handler: ConversationHandler) {
+  onConverse(handler: basebot.ConversationHandler) {
     this.convHandler = handler;
   }
 }
