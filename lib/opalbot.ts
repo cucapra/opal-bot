@@ -95,6 +95,7 @@ export class OpalBot {
     term.onConverse(async (text, conv) => {
       await this.interact(text, conv);
     });
+    term.run();
   }
 
   /**

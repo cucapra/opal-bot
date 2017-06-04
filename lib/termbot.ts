@@ -41,7 +41,10 @@ export class TerminalBot {
    */
   public convHandler: basebot.ConversationHandler | null = null;
 
-  constructor() {
+  /**
+   * Wait for terminal input and dispatch it.
+   */
+  run() {
     this.rl = readline.createInterface(process.stdin, process.stdout);
 
     // Handle input.
