@@ -15,7 +15,7 @@ class Conversation implements basebot.Conversation {
   ) {}
 
   send(text: string) {
-    this.termbot.rl.write(text);
+    this.termbot.print(text);
   }
 
   async recv() {
@@ -66,9 +66,17 @@ export class TerminalBot {
    * Get the next line from the console.
    */
   wait(): Promise<string> {
+    process.stdout.write('>>> ');
     return new Promise((resolve, reject) => {
       this.waiters.push(resolve);
     });
+  }
+
+  /**
+   * Print a line of dialogue to the console.
+   */
+  print(message: string) {
+    process.stdout.write('<<< ' + message + '\n');
   }
 
   /**
