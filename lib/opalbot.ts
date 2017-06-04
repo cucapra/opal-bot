@@ -89,7 +89,8 @@ export class OpalBot {
   /**
    * Get a user from the database, or create it if it doesn't exist.
    */
-  getUser(slack_id: string): User {
+  getUser(conv: Conversation): User {
+    let [, slack_id] = conv.who();  // Currently assuming all users on Slack.
     let user = this.users.findOne({ slack_id }) as User;
     if (user) {
       return user;
@@ -108,7 +109,7 @@ export class OpalBot {
   async getCalendarURL(conv: Conversation,
                        force = false): Promise<string | null> {
     // Do we already have a calendar URL for this user?
-    let user = this.getUser(conv.userId);
+    let user = this.getUser(conv);
     if (!force && user.calendar_url) {
       return user.calendar_url;
     }

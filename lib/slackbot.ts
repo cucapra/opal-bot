@@ -115,17 +115,24 @@ export class Conversation implements basebot.Conversation {
   ) {}
 
   /**
-   * Send a message in the conversation.
+   * Send a message on the channel.
    */
   send(text: string) {
     this.slack.send(text, this.chanId);
   }
 
   /**
-   * Receive a message in this conversation.
+   * Receive a message on the channel.
    */
   async recv() {
     return (await this.slack.wait(this.chanId)).text;
+  }
+
+  /**
+   * Identify the user. The namespace is "slack".
+   */
+  who(): [string, string] {
+    return ["slack", this.userId];
   }
 }
 
