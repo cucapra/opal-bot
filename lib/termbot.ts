@@ -66,7 +66,6 @@ export class TerminalBot {
    * Get the next line from the console.
    */
   wait(): Promise<string> {
-    process.stdout.write('>>> ');
     return new Promise((resolve, reject) => {
       this.waiters.push(resolve);
     });
