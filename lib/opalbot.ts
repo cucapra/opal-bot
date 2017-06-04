@@ -5,7 +5,7 @@
 import * as util from 'util';
 import { SlackBot, Message } from './slackbot';
 import { TerminalBot } from './termbot';
-import { Conversation } from './basebot';
+import { Bot, Conversation } from './basebot';
 import { Wit } from 'node-wit';
 import * as wit from './wit';
 
@@ -52,7 +52,6 @@ async function fetchEvents(url: string) {
  */
 export class OpalBot {
   public users: LokiCollection<User>;
-  public slack: SlackBot;
 
   constructor(
     public wit: Wit,
@@ -67,24 +66,20 @@ export class OpalBot {
    * Connect the bot to a Slack team.
    */
   connectSlack(token: string, statusChan: string) {
-    this.slack = new SlackBot(token);
+    let slack = new SlackBot(token);
 
     // Handle Slack connection.
-    this.slack.on("ready", async () => {
-      console.log(`I'm ${this.slack.self.name} on ${this.slack.team.name}`);
-      let status_channel = this.slack.channel(statusChan);
+    slack.on("ready", async () => {
+      console.log(`I'm ${slack.self.name} on ${slack.team.name}`);
+      let status_channel = slack.channel(statusChan);
       if (status_channel) {
         let commit = await gitSummary(__dirname);
-        this.slack.send(`:wave: @ ${commit}`, status_channel.id);
+        slack.send(`:wave: @ ${commit}`, status_channel.id);
       }
     });
 
-    // Handle new conversations.
-    this.slack.onConverse(async (text, conv) => {
-      await this.interact(text, conv);
-    });
-
-    this.slack.start();
+    this.register(slack);
+    slack.start();
   }
 
   /**
@@ -92,10 +87,17 @@ export class OpalBot {
    */
   runTerminal() {
     let term = new TerminalBot();
-    term.onConverse(async (text, conv) => {
+    this.register(term);
+    term.run();
+  }
+
+  /**
+   * Register this bot's callbacks with a connection.
+   */
+  register(bot: Bot) {
+    bot.onConverse(async (text, conv) => {
       await this.interact(text, conv);
     });
-    term.run();
   }
 
   /**

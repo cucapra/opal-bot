@@ -32,7 +32,7 @@ type MessageHandler = (message: string) => void;
 /**
  * A debugging bot that interacts via stdout/stdin.
  */
-export class TerminalBot {
+export class TerminalBot implements basebot.Bot {
   public waiters: MessageHandler[] = [];
   public rl: readline.ReadLine;
 

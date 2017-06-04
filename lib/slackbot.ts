@@ -138,7 +138,7 @@ export class Conversation implements basebot.Conversation {
 /**
  * Wraps a Slack client for bot-like interactions.
  */
-export class SlackBot {
+export class SlackBot implements basebot.Bot {
   public rtm: any;
 
   public channels: Map<string, Channel> = new Map();

@@ -30,3 +30,13 @@ export interface Conversation {
  */
 export type ConversationHandler =
   (message: string, conv: Conversation) => void;
+
+/**
+ * A bot connection dispatches to conversation handlers.
+ */
+export interface Bot {
+  /**
+   * Register a callback for new conversations.
+   */
+  onConverse(handler: ConversationHandler): void;
+}
