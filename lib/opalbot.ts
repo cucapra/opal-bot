@@ -50,33 +50,38 @@ async function fetchEvents(url: string) {
  */
 export class OpalBot {
   public users: LokiCollection<User>;
+  public slack: SlackBot;
 
   constructor(
-    public slack: SlackBot,
     public wit: Wit,
     public db: Loki,
-    public statusChan: string,
   ) {
     // Get or create a database collection for users.
     this.users = (db.getCollection("users") ||
       db.addCollection("users")) as LokiCollection<User>;
-
-    // Handle Slack connection.
-    slack.on("ready", async () => {
-      console.log(`I'm ${slack.self.name} on ${slack.team.name}`);
-      this.ready();
-    });
-
-    // Handle new conversations.
-    slack.onConverse(async (text, conv) => {
-      await this.interact(text, conv);
-    });
   }
 
   /**
-   * Connect to Slack to bring up the bot.
+   * Connect the bot to a Slack team.
    */
-  start() {
+  connectSlack(token: string, statusChan: string) {
+    this.slack = new SlackBot(token);
+
+    // Handle Slack connection.
+    this.slack.on("ready", async () => {
+      console.log(`I'm ${this.slack.self.name} on ${this.slack.team.name}`);
+      let status_channel = this.slack.channel(statusChan);
+      if (status_channel) {
+        let commit = await gitSummary(__dirname);
+        this.slack.send(`:wave: @ ${commit}`, status_channel.id);
+      }
+    });
+
+    // Handle new conversations.
+    this.slack.onConverse(async (text, conv) => {
+      await this.interact(text, conv);
+    });
+
     this.slack.start();
   }
 
@@ -213,18 +218,6 @@ export class OpalBot {
       } else {
         await this.handle_default(conv);
       }
-    }
-  }
-
-  /**
-   * Called when we're connected to Slack.
-   */
-  async ready() {
-    // Say hi.
-    let status_channel = this.slack.channel(this.statusChan);
-    if (status_channel) {
-      let commit = await gitSummary(__dirname);
-      this.slack.send(`:wave: @ ${commit}`, status_channel.id);
     }
   }
 }
