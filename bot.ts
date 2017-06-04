@@ -26,7 +26,12 @@ async function main() {
     new Wit({ accessToken: WIT_TOKEN }),
     await openDB(DB_NAME),
   );
-  bot.connectSlack(SLACK_TOKEN, STATUS_CHAN);
+
+  if (process.argv[2] === '-t') {
+    bot.runTerminal();
+  } else {
+    bot.connectSlack(SLACK_TOKEN, STATUS_CHAN);
+  }
 }
 
 main();

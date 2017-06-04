@@ -4,6 +4,7 @@
 
 import * as util from 'util';
 import { SlackBot, Message } from './slackbot';
+import { TerminalBot } from './termbot';
 import { Conversation } from './basebot';
 import { Wit } from 'node-wit';
 import * as wit from './wit';
@@ -84,6 +85,16 @@ export class OpalBot {
     });
 
     this.slack.start();
+  }
+
+  /**
+   * Run the bot in terminal (debugging) mode.
+   */
+  runTerminal() {
+    let term = new TerminalBot();
+    term.onConverse(async (text, conv) => {
+      await this.interact(text, conv);
+    });
   }
 
   /**
