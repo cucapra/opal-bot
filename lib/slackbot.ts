@@ -128,10 +128,18 @@ export class Conversation implements basebot.Conversation {
   }
 
   /**
-   * Identify the user. The namespace is "slack".
+   * The user's (opaque) Slack ID.
    */
-  who(): [string, string] {
-    return ["slack", this.userId];
+  user() {
+    return this.userId;
+  }
+
+  /**
+   * The namespace is just "slack". Eventually, this should probably
+   * identify the team.
+   */
+  namespace() {
+    return "slack";
   }
 }
 

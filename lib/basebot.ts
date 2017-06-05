@@ -17,11 +17,16 @@ export interface Conversation {
   recv(): Promise<string>;
 
   /**
-   * Identify the user that this conversation is with. Returns a *namespace*
-   * string indicating where the user is located (e.g., the service they're
-   * logged into) and an *id* string indicating the specific user.
+   * A string identifying the user that this conversation is with.
    */
-  who(): [string, string];
+  user(): string;
+
+  /**
+   * A namespace indicating the scope of user IDs (e.g., the service where the
+   * user is logged in). Two users with the same user ID in different
+   * namespaces are different users.
+   */
+  namespace(): string;
 }
 
 /**

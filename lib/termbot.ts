@@ -22,8 +22,12 @@ class Conversation implements basebot.Conversation {
     return await this.termbot.wait();
   }
 
-  who(): [string, string] {
-    return ["terminal", this.userId];
+  user() {
+    return this.userId;
+  }
+
+  namespace() {
+    return "terminal";
   }
 }
 
