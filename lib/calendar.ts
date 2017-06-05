@@ -1,8 +1,8 @@
 import * as ical from 'ical.js';
 
-type Calendar = ical.Component;
-type Event = ical.Event;
-type Time = ical.Time;
+export type Calendar = ical.Component;
+export type Event = ical.Event;
+export type Time = ical.Time;
 
 /**
  * Get the bounds of the current week.

@@ -23,14 +23,9 @@ interface User {
 }
 
 /**
- * Get some events from a calendar at a given URL. This is currently
- * disastrously inefficient; it downloads and parses the whole calendar
- * every time.
+ * Get some events from a calendar as a string.
  */
-async function fetchEvents(url: string) {
-  let resp = await fetch(url);
-  let cal = calendar.parse(await resp.text());
-
+async function someEvents(cal: calendar.Calendar) {
   // Get the bounds of the current week.
   let [start, end] = calendar.thisWeek();
 
@@ -47,7 +42,15 @@ async function fetchEvents(url: string) {
  * The main logic for the Opal bot.
  */
 export class OpalBot {
+  /**
+   * User settings, stored in the database.
+   */
   public users: LokiCollection<User>;
+
+  /**
+   * Cached copies of the users' calendars, indexed by URL.
+   */
+  public calendars: Map<String, calendar.Calendar>;
 
   constructor(
     public wit: Wit,
@@ -140,6 +143,23 @@ export class OpalBot {
   }
 
   /**
+   * Get the calendar data for a calendar URL, either from the cache or from
+   * the network. `force` always downloads the data.
+   */
+  async getCalendarData(url: string, force = false) {
+    // TODO This should invalidate the cache after a timeout.
+    let cal = this.calendars.get(url);
+    if (cal && !force) {
+      return cal;
+    } else {
+      let resp = await fetch(url);
+      let cal = calendar.parse(await resp.text());
+      this.calendars.set(url, cal);
+      return cal;
+    }
+  }
+
+  /**
    * Conversation with a greeting intent.
    */
   async handle_greeting(conv: Conversation) {
@@ -167,7 +187,8 @@ export class OpalBot {
     conv.send("let's get your calendar!");
     let url = await this.getCalendarURL(conv);
     if (url) {
-      let agenda = await fetchEvents(url);
+      let cal = await this.getCalendarData(url);
+      let agenda = await someEvents(cal);
       conv.send(agenda);
     }
   }
