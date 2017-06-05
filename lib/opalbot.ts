@@ -9,7 +9,6 @@ import { Bot, Conversation } from './basebot';
 import { Wit } from 'node-wit';
 import * as wit from './wit';
 
-import * as ical from 'ical.js';
 import fetch from 'node-fetch';
 
 import { findURL, gitSummary } from './util';
@@ -33,10 +32,7 @@ async function fetchEvents(url: string) {
   let calendar = cal.parse(await resp.text());
 
   // Get the bounds of the current week.
-  let day = ical.Time.now();
-  let start = day.startOfWeek();
-  let end = day.endOfWeek();
-  end.adjust(1, 0, 0, 0);  // "One past the end" for iteration.
+  let [start, end] = cal.thisWeek();
 
   // Get events in the range.
   let out = "";
@@ -180,7 +176,8 @@ export class OpalBot {
    * Conversation where the user wants to schedule a meeting.
    */
   async handle_schedule_meeting(conv: Conversation) {
-    conv.send("let's schedule a meeting!");
+    conv.send("let's get to schedulin'! " +
+              "[actually this is not quite implemented yet]");
   }
 
   /**

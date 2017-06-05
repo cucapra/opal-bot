@@ -1,9 +1,24 @@
 import * as ical from 'ical.js';
 
+type Calendar = ical.Component;
+type Event = ical.Event;
+type Time = ical.Time;
+
+/**
+ * Get the bounds of the current week.
+ */
+export function thisWeek(): [Time, Time] {
+  let day = ical.Time.now();
+  let start = day.startOfWeek();
+  let end = day.endOfWeek();
+  end.adjust(1, 0, 0, 0);  // "One past the end" for iteration.
+  return [start, end];
+}
+
 /**
  * Parse the first component from an iCal document. Can raise a ParseError.
  */
-export function parse(s: string): ical.Component {
+export function parse(s: string): Calendar {
   let jcal = ical.parse(s);
   return new ical.Component(jcal as any);
 }
@@ -11,7 +26,7 @@ export function parse(s: string): ical.Component {
 /**
  * Generate all the Events in a calendar.
  */
-export function* getEvents(cal: ical.Component): Iterable<ical.Event> {
+export function* getEvents(cal: Calendar): Iterable<Event> {
   for (let vevent of cal.getAllSubcomponents('vevent')) {
     yield new ical.Event(vevent);
   }
@@ -22,8 +37,7 @@ export function* getEvents(cal: ical.Component): Iterable<ical.Event> {
  * both repeating and non-repeating events: non-repeating events just have
  * a single "occurrence."
  */
-export function* eventOcurrences(event: ical.Event,
-                                 start: ical.Time, end: ical.Time) {
+export function* eventOcurrences(event: Event, start: Time, end: Time) {
   if (event.isRecurring()) {
     // Multiple occurrences.
     let it = event.iterator();
@@ -50,8 +64,8 @@ export function* eventOcurrences(event: ical.Event,
  * Generate event/start-time pairs for all the occurrenes of all the events
  * in a calendar in a given range.
  */
-export function* getOccurrences(cal: ical.Component, start: ical.Time, end: ical.Time):
-  Iterable<[ical.Event, ical.Time]>
+export function* getOccurrences(cal: Calendar, start: Time, end: Time):
+  Iterable<[Event, Time]>
 {
   for (let event of getEvents(cal)) {
     for (let tm of eventOcurrences(event, start, end)) {
@@ -63,7 +77,7 @@ export function* getOccurrences(cal: ical.Component, start: ical.Time, end: ical
 /**
  * Get the date on which a time falls.
  */
-function dateOfTime(time: ical.Time): ical.Time {
+function dateOfTime(time: Time): Time {
   let timeJSON = time.toJSON();
   return new ical.Time({
       year: timeJSON['year'],
