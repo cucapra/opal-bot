@@ -33,7 +33,7 @@ async function someEvents(cal: calendar.Calendar) {
   let out = "";
   for (let [event, time] of calendar.getOccurrences(cal, start, end)) {
     let details = event.getOccurrenceDetails(time);
-    out +=  details.startDate.toString() + " " + event.summary + "\n";
+    out += details.startDate.toString() + " " + event.summary + "\n";
   }
   return out.trim();
 }
@@ -50,7 +50,7 @@ export class OpalBot {
   /**
    * Cached copies of the users' calendars, indexed by URL.
    */
-  public calendars: Map<String, calendar.Calendar>;
+  public calendars: Map<String, calendar.Calendar> = new Map();
 
   constructor(
     public wit: Wit,
