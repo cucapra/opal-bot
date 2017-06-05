@@ -11,7 +11,7 @@ import * as readline from 'readline';
 class Conversation implements basebot.Conversation {
   constructor(
     public termbot: TerminalBot,
-    public userId: string,
+    public user: string,
   ) {}
 
   send(text: string) {
@@ -20,10 +20,6 @@ class Conversation implements basebot.Conversation {
 
   async recv() {
     return await this.termbot.wait();
-  }
-
-  get user() {
-    return this.userId;
   }
 
   namespace = "terminal";

@@ -110,7 +110,7 @@ export class Conversation implements basebot.Conversation {
   constructor(
     public slack: SlackBot,
     public chanId: string,
-    public userId: string,
+    public user: string,
   ) {}
 
   /**
@@ -125,13 +125,6 @@ export class Conversation implements basebot.Conversation {
    */
   async recv() {
     return (await this.slack.wait(this.chanId)).text;
-  }
-
-  /**
-   * The user's (opaque) Slack ID.
-   */
-  get user() {
-    return this.userId;
   }
 
   /**
