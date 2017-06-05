@@ -22,13 +22,11 @@ class Conversation implements basebot.Conversation {
     return await this.termbot.wait();
   }
 
-  user() {
+  get user() {
     return this.userId;
   }
 
-  namespace() {
-    return "terminal";
-  }
+  namespace = "terminal";
 }
 
 type MessageHandler = (message: string) => void;

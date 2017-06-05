@@ -19,14 +19,14 @@ export interface Conversation {
   /**
    * A string identifying the user that this conversation is with.
    */
-  user(): string;
+  user: string;
 
   /**
    * A namespace indicating the scope of user IDs (e.g., the service where the
    * user is logged in). Two users with the same user ID in different
    * namespaces are different users.
    */
-  namespace(): string;
+  namespace: string;
 }
 
 /**

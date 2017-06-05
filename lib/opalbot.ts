@@ -100,7 +100,7 @@ export class OpalBot {
    * Get a user from the database, or create it if it doesn't exist.
    */
   getUser(conv: Conversation): User {
-    let slack_id = conv.user();  // Currently assuming all users on Slack.
+    let slack_id = conv.user;  // Currently assuming all users on Slack.
     let user = this.users.findOne({ slack_id }) as User;
     if (user) {
       return user;

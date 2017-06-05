@@ -130,7 +130,7 @@ export class Conversation implements basebot.Conversation {
   /**
    * The user's (opaque) Slack ID.
    */
-  user() {
+  get user() {
     return this.userId;
   }
 
@@ -138,9 +138,7 @@ export class Conversation implements basebot.Conversation {
    * The namespace is just "slack". Eventually, this should probably
    * identify the team.
    */
-  namespace() {
-    return "slack";
-  }
+  namespace = "slack";
 }
 
 /**
