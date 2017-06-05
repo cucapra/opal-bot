@@ -12,7 +12,7 @@ import * as wit from './wit';
 import fetch from 'node-fetch';
 
 import { findURL, gitSummary } from './util';
-import * as cal from './cal';
+import * as calendar from './calendar';
 
 /**
  * Our data model for keeping track of users' data.
@@ -29,14 +29,14 @@ interface User {
  */
 async function fetchEvents(url: string) {
   let resp = await fetch(url);
-  let calendar = cal.parse(await resp.text());
+  let cal = calendar.parse(await resp.text());
 
   // Get the bounds of the current week.
-  let [start, end] = cal.thisWeek();
+  let [start, end] = calendar.thisWeek();
 
   // Get events in the range.
   let out = "";
-  for (let [event, time] of cal.getOccurrences(calendar, start, end)) {
+  for (let [event, time] of calendar.getOccurrences(cal, start, end)) {
     let details = event.getOccurrenceDetails(time);
     out +=  details.startDate.toString() + " " + event.summary + "\n";
   }
