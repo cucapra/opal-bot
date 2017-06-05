@@ -46,22 +46,25 @@ export class TerminalBot implements basebot.Bot {
    */
   run() {
     this.rl = readline.createInterface(process.stdin, process.stdout);
+    this.rl.setPrompt('>>> ');
 
     // Handle input.
-    this.rl.on('line', (line: string) => {
+    this.rl.prompt();
+    this.rl.on('line', async (line: string) => {
       let text = line.trim();
 
       // Is a conversation waiting for this line?
       let callback = this.waiters.pop();
       if (callback) {
         // Use the existing conversation.
-        callback(text);
+        await callback(text);
       } else {
         // Start a new converstion.
         if (this.convHandler) {
-          this.convHandler(text, new Conversation(this, "user"));
+          await this.convHandler(text, new Conversation(this, "user"));
         }
       }
+      this.rl.prompt();
     });
   }
 
@@ -69,6 +72,7 @@ export class TerminalBot implements basebot.Bot {
    * Get the next line from the console.
    */
   wait(): Promise<string> {
+    this.rl.prompt();
     return new Promise((resolve, reject) => {
       this.waiters.push(resolve);
     });
