@@ -153,6 +153,9 @@ export class OpalBot {
       return cal;
     } else {
       let resp = await fetch(url);
+      if (!resp.ok) {
+        throw `could not get calendar data (error ${resp.status})`;
+      }
       let cal = calendar.parse(await resp.text());
       this.calendars.set(url, cal);
       return cal;
@@ -187,7 +190,14 @@ export class OpalBot {
     conv.send("let's get your calendar!");
     let url = await this.getCalendarURL(conv);
     if (url) {
-      let cal = await this.getCalendarData(url);
+      let cal;
+      try {
+        cal = await this.getCalendarData(url);
+      } catch (e) {
+        console.error(e);
+        conv.send(`:flushed: ${e}`);
+        return;
+      }
       let agenda = await someEvents(cal);
       conv.send(agenda);
     }
