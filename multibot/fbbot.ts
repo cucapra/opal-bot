@@ -16,10 +16,11 @@ export class FacebookBot implements basebot.Bot {
       verify,
     });
 
-    this.msgr.on('message', (payload: any, reply: any) => {
-      console.log(payload);
-      console.log(payload.message.text);
-      reply({ text: 'hi!!!' }, (err: any) => {
+    this.msgr.on('message', (event) => {
+      console.log(event);
+      console.log(event.message.text);
+
+      this.msgr.sendMessage(event.sender.id, { text: 'hi!!!' }, (err: any) => {
         console.log("err", err);
       });
     });
