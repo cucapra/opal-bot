@@ -15,6 +15,14 @@ export class FacebookBot implements basebot.Bot {
       app_secret,
       verify,
     });
+
+    this.msgr.on('message', (payload: any, reply: any) => {
+      console.log(payload);
+      console.log(payload.message.text);
+      reply({ text: 'hi!!!' }, (err: any) => {
+        console.log("err", err);
+      });
+    });
   }
 
   handler() {
