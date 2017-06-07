@@ -3,9 +3,9 @@
  */
 
 import * as util from 'util';
-import { SlackBot, Message } from './slackbot';
-import { TerminalBot } from './termbot';
-import { Bot, Conversation } from './basebot';
+import { SlackBot, Message } from '../multibot/slackbot';
+import { TerminalBot } from '../multibot/termbot';
+import { Bot, Conversation } from '../multibot/basebot';
 import { Wit } from 'node-wit';
 import * as wit from './wit';
 
