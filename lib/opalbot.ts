@@ -95,8 +95,8 @@ export class OpalBot {
   /**
    * Run a server to interact with Facebook Messenger.
    */
-  runFacebook(token: string, secret: string, verify: string, port: number) {
-    let fb = new FacebookBot(token, secret, verify);
+  runFacebook(token: string, verify: string, port: number) {
+    let fb = new FacebookBot(token, verify);
     let server = http.createServer(fb.handler());
     server.listen(port);
   }
