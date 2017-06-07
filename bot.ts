@@ -5,6 +5,9 @@ import { OpalBot } from './lib/opalbot';
 
 const SLACK_TOKEN = process.env['SLACK_BOT_TOKEN'] || '';
 const WIT_TOKEN = process.env['WIT_ACCESS_TOKEN'] || '';
+const FB_PAGE_TOKEN = process.env['FB_PAGE_TOKEN'] || '';
+const FB_APP_SECRET = process.env['FB_APP_SECRET'] || '';
+const FB_VERIFY_TOKEN = process.env['FB_VERIFY_TOKEN'] || '';
 const STATUS_CHAN = 'bot-status';
 const DB_NAME = 'store.json';
 
@@ -29,6 +32,8 @@ async function main() {
 
   if (process.argv[2] === '-t') {
     bot.runTerminal();
+  } else if (process.argv[2] == '-f') {
+    bot.runFacebook(FB_PAGE_TOKEN, FB_APP_SECRET, FB_VERIFY_TOKEN, 4915);
   } else {
     bot.connectSlack(SLACK_TOKEN, STATUS_CHAN);
   }

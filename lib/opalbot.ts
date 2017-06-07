@@ -6,8 +6,10 @@ import * as util from 'util';
 import { Bot, Conversation } from '../multibot';
 import { SlackBot } from '../multibot/slackbot';
 import { TerminalBot } from '../multibot/termbot';
+import { FacebookBot } from '../multibot/fbbot';
 import { Wit } from 'node-wit';
 import * as wit from './wit';
+import * as http from 'http';
 
 import fetch from 'node-fetch';
 
@@ -88,6 +90,15 @@ export class OpalBot {
     let term = new TerminalBot();
     this.register(term);
     term.run();
+  }
+
+  /**
+   * Run a server to interact with Facebook Messenger.
+   */
+  runFacebook(token: string, secret: string, verify: string, port: number) {
+    let fb = new FacebookBot(token, secret, verify);
+    let server = http.createServer(fb.handler());
+    server.listen(port);
   }
 
   /**

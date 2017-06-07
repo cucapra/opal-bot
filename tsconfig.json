@@ -8,7 +8,8 @@
         // Custom type declarations for Node modules.
         "baseUrl": ".",
         "paths": {
-          "ical.js": ["types/ical.js.d.ts"]
+          "ical.js": ["types/ical.js.d.ts"],
+          "messenger-bot": ["types/messenger-bot.d.ts"]
         }
     }
 }
