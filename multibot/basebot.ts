@@ -45,3 +45,53 @@ export interface Bot {
    */
   onConverse(handler: ConversationHandler): void;
 }
+
+/**
+ * A repository for threads of conversation waiting on events, M, on channels
+ * identified by keys, K.
+ */
+export class Spool<K, M> {
+  private waiters: [K, (message: M) => void][] = [];
+
+  /**
+   * Make a spool that calls `handler` when no one is waiting on a message.
+   */
+  constructor(
+    public handler: (message: M) => void,
+  ) {}
+
+  /**
+   * Await a message on a given channel.
+   */
+  wait(key: K): Promise<M> {
+    return new Promise((resolve, reject) => {
+      this.waiters.push([key, resolve]);
+    });
+  }
+
+  /**
+   * Dispatch a message on a channel. 
+   */
+  dispatch(key: K, message: M) {
+    // Get the callbacks for this message and remove them from the list
+    // of pending waiters.
+    let callbacks: ((message: M) => void)[] = [];
+    this.waiters = this.waiters.filter(([waitkey, cbk]) => {
+      if (waitkey === key) {
+        callbacks.push(cbk);
+        return false;
+      }
+      return true;
+    });
+
+    if (callbacks.length) {
+      // Invoke the callbacks.
+      for (let callback of callbacks) {
+        callback(message);
+      }
+    } else {
+      // No one is waiting for this message.
+      this.handler(message);
+    }
+  }
+}
