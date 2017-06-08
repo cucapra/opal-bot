@@ -124,7 +124,7 @@ export class Conversation implements basebot.Conversation {
    * Receive a message on the channel.
    */
   async recv() {
-    return (await this.slack.wait(this.chanId)).text;
+    return (await this.slack.spool.wait(this.chanId)).text;
   }
 
   /**
@@ -145,13 +145,8 @@ export class SlackBot implements basebot.Bot {
   public team: Team;
   public self: User;
 
-  /**
-   * A list of handlers waiting to consume a message from a given channel
-   * indicated by its ID.
-   */
-  public waiters: [string, MessageHandler][] = [];
-
   public onconverse: basebot.ConversationHandler | null = null;
+  public spool = new basebot.Spool<string, Message>();
 
   /**
    * Construct a bot by creating a Slack RTM client object and attach this
@@ -176,32 +171,14 @@ export class SlackBot implements basebot.Bot {
 
     // Event handler for dispatching waited-on messages.
     this.on("message", (message) => {
-      // Get the callbacks for this message and remove them from the list
-      // of pending waiters.
-      let callbacks: MessageHandler[] = [];
-      this.waiters = this.waiters.filter(([channel_id, callback]) => {
-        if (message.channel == channel_id) {
-          callbacks.push(callback);
-          return false;
-        }
-        return true;
-      });
-
-      if (callbacks.length) {
-        // Invoke the callbacks.
-        for (let callback of callbacks) {
-          callback(message);
-        }
-      } else {
-        // No one is waiting for this message.
-        if (this.onconverse && this.ims.get(message.channel)) {
-          // This is a private message. (Eventually, we should also handle
-          // mentions.) Call the conversation handler.
-          this.onconverse(
-            message.text,
-            new Conversation(this, message.channel, message.user)
-          );
-        }
+      let cbk = this.spool.fire(message.channel, message);
+      if (cbk) {
+        cbk(message);
+      } else if (this.onconverse) {
+        this.onconverse(
+          message.text,
+          new Conversation(this, message.channel, message.user)
+        );
       }
     });
   }
@@ -237,14 +214,5 @@ export class SlackBot implements basebot.Bot {
    */
   on(event: keyof Events, listener: Events[typeof event]) {
     this.rtm.on(EVENT_IDS[event], listener);
-  }
-
-  /**
-   * Wait for a message on a given channel.
-   */
-  wait(channel_id: string): Promise<Message> {
-    return new Promise((resolve, reject) => {
-      this.waiters.push([channel_id, resolve]);
-    });
   }
 }
