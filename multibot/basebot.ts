@@ -54,13 +54,6 @@ export class Spool<K, M> {
   private waiters: [K, (message: M) => void][] = [];
 
   /**
-   * Make a spool that calls `handler` when no one is waiting on a message.
-   */
-  constructor(
-    public handler: (message: M) => void,
-  ) {}
-
-  /**
    * Await a message on a given channel.
    */
   wait(key: K): Promise<M> {
@@ -89,9 +82,10 @@ export class Spool<K, M> {
       for (let callback of callbacks) {
         callback(message);
       }
+      return true;
     } else {
       // No one is waiting for this message.
-      this.handler(message);
+      return false;
     }
   }
 }

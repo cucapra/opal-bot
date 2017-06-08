@@ -30,20 +30,18 @@ class Conversation implements basebot.Conversation {
    * Receive the next message from the user.
    */
   async recv() {
-    let msg = await this.fb.wait(this.user);
+    let msg = await this.fb.spool.wait(this.user);
     return msg.text;
   }
 
   namespace = "facebook";
 }
 
-export interface Message {
+interface Message {
   mid: string;
   seq: number;
   text: string;
 }
-
-type MessageHandler = (message: Message) => void;
 
 /**
  * A Facebook Messenger API wrapper for bot-like interactions.
@@ -51,12 +49,9 @@ type MessageHandler = (message: Message) => void;
 export class FacebookBot implements basebot.Bot {
   public msgr: Messenger;
 
-  /**
-   * A list of handlers waiting to consume a message from a given user ID.
-   */
-  public waiters: [string, MessageHandler][] = [];
-
   public convHandler: basebot.ConversationHandler | null = null;
+
+  public spool = new basebot.Spool<string, Message>();
 
   /**
    * Create a Messenger connection with a given page token and webhook verify
@@ -69,26 +64,11 @@ export class FacebookBot implements basebot.Bot {
     });
 
     this.msgr.on('message', (event) => {
-      let callbacks: MessageHandler[] = [];
-      this.waiters = this.waiters.filter(([userId, cbk]) => {
-        if (userId === event.sender.id) {
-          callbacks.push(cbk);
-          return false;
-        }
-        return true;
-      });
-
-      if (callbacks.length) {
-        // Existing conversation.
-        for (let cbk of callbacks) {
-          cbk(event.message);
-        }
-      } else {
+      let handled = this.spool.dispatch(event.sender.id, event.message);
+      if (!handled && this.convHandler) {
         // New conversation.
         let conv = new Conversation(this, event.sender.id);
-        if (this.convHandler) {
-          this.convHandler(event.message.text, conv);
-        }
+        this.convHandler(event.message.text, conv);
       }
     });
   }
@@ -99,15 +79,6 @@ export class FacebookBot implements basebot.Bot {
    */
   handler() {
     return this.msgr.middleware();
-  }
-
-  /**
-   * Wait for a message from a user.
-   */
-  wait(userId: string): Promise<Message> {
-    return new Promise((resolve, reject) => {
-      this.waiters.push([userId, resolve]);
-    });
   }
 
   onConverse(cbk: basebot.ConversationHandler) {
