@@ -19,7 +19,7 @@ class Conversation implements basebot.Conversation {
   }
 
   async recv() {
-    return await this.termbot.wait();
+    return await this.termbot.spool.wait(null);
   }
 
   namespace = "terminal";
@@ -31,9 +31,8 @@ type MessageHandler = (message: string) => void;
  * A debugging bot that interacts via stdout/stdin.
  */
 export class TerminalBot implements basebot.Bot {
-  public waiters: MessageHandler[] = [];
   public rl: readline.ReadLine;
-
+  public spool = new basebot.Spool<null, string>();
   public onconverse: basebot.ConversationHandler | null = null;
 
   /**
@@ -47,29 +46,13 @@ export class TerminalBot implements basebot.Bot {
     this.rl.prompt();
     this.rl.on('line', async (line: string) => {
       let text = line.trim();
-
-      // Is a conversation waiting for this line?
-      let callback = this.waiters.pop();
-      if (callback) {
-        // Use the existing conversation.
-        await callback(text);
-      } else {
-        // Start a new converstion.
-        if (this.onconverse) {
-          await this.onconverse(text, new Conversation(this, "user"));
-        }
+      let cbk = this.spool.dispatch(null, text);
+      if (cbk) {
+        await cbk(text);
+      } else if (this.onconverse) {
+        await this.onconverse(text, new Conversation(this, "user"));
       }
       this.rl.prompt();
-    });
-  }
-
-  /**
-   * Get the next line from the console.
-   */
-  wait(): Promise<string> {
-    this.rl.prompt();
-    return new Promise((resolve, reject) => {
-      this.waiters.push(resolve);
     });
   }
 

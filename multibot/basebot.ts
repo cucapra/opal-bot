@@ -65,27 +65,17 @@ export class Spool<K, M> {
   /**
    * Dispatch a message on a channel. 
    */
-  dispatch(key: K, message: M) {
-    // Get the callbacks for this message and remove them from the list
-    // of pending waiters.
-    let callbacks: ((message: M) => void)[] = [];
-    this.waiters = this.waiters.filter(([waitkey, cbk]) => {
-      if (waitkey === key) {
-        callbacks.push(cbk);
-        return false;
+  dispatch(key: K, message: M): ((message: M) => void) | null {
+    // Check whether there's a callback waiting for this message and,
+    // if so, remove it.
+    for (let [i, [k, cbk]] of this.waiters.entries()) {
+      if (k === key) {
+        this.waiters.splice(i, 1);
+        return cbk;
       }
-      return true;
-    });
-
-    if (callbacks.length) {
-      // Invoke the callbacks.
-      for (let callback of callbacks) {
-        callback(message);
-      }
-      return true;
-    } else {
-      // No one is waiting for this message.
-      return false;
     }
+
+    // Otherwise, indicate that this was unhandled.
+    return null;
   }
 }
