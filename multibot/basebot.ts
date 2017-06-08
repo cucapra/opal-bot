@@ -63,9 +63,10 @@ export class Spool<K, M> {
   }
 
   /**
-   * Dispatch a message on a channel. 
+   * Dispatch a message on a channel. If there is a callback waiting for this
+   * message, pop and return it. Otherwise, return null.
    */
-  fire(key: K, message: M): ((message: M) => void) | null {
+  dispatch(key: K, message: M): ((message: M) => void) | null {
     // Check whether there's a callback waiting for this message and,
     // if so, remove it.
     for (let [i, [k, cbk]] of this.waiters.entries()) {
@@ -77,5 +78,20 @@ export class Spool<K, M> {
 
     // Otherwise, indicate that this was unhandled.
     return null;
+  }
+
+  /**
+   * Invoke the appropriate callback for a message, or the `onconverse`
+   * handler for new conversations.
+   */
+  fire(bot: Bot, key: K, message: M, text: string, mkconv: () => Conversation) {
+    let cbk = this.dispatch(key, message);
+    if (cbk) {
+      // Existing conversation.
+      cbk(message);
+    } else if (bot.onconverse) {
+      // New conversation.
+      bot.onconverse(text, mkconv());
+    }
   }
 }

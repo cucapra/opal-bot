@@ -171,15 +171,13 @@ export class SlackBot implements basebot.Bot {
 
     // Event handler for dispatching waited-on messages.
     this.on("message", (message) => {
-      let cbk = this.spool.fire(message.channel, message);
-      if (cbk) {
-        cbk(message);
-      } else if (this.onconverse) {
-        this.onconverse(
-          message.text,
-          new Conversation(this, message.channel, message.user)
-        );
-      }
+      this.spool.fire(
+        this,
+        message.channel,
+        message,
+        message.text,
+        () => new Conversation(this, message.channel, message.user),
+      );
     });
   }
 
