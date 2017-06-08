@@ -34,7 +34,7 @@ export interface Conversation {
  * the continuing conversation.
  */
 export type ConversationHandler =
-  (message: string, conv: Conversation) => void;
+  (message: string, conv: Conversation) => Promise<void>;
 
 /**
  * A bot connection dispatches to conversation handlers.
@@ -84,14 +84,15 @@ export class Spool<K, M> {
    * Invoke the appropriate callback for a message, or the `onconverse`
    * handler for new conversations.
    */
-  fire(bot: Bot, key: K, message: M, text: string, mkconv: () => Conversation) {
+  async fire(bot: Bot, key: K, message: M, text: string,
+             mkconv: () => Conversation) {
     let cbk = this.dispatch(key, message);
     if (cbk) {
       // Existing conversation.
       cbk(message);
     } else if (bot.onconverse) {
       // New conversation.
-      bot.onconverse(text, mkconv());
+      await bot.onconverse(text, mkconv());
     }
   }
 }

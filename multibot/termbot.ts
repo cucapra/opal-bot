@@ -46,10 +46,11 @@ export class TerminalBot implements basebot.Bot {
     this.rl.prompt();
     this.rl.on('line', async (line: string) => {
       let text = line.trim();
-      this.spool.fire(
+      await this.spool.fire(
         this, null, text, text,
         () => new Conversation(this, "user"),
       );
+      this.rl.prompt();
     });
   }
 
