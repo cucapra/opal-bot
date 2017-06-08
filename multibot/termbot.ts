@@ -19,6 +19,7 @@ class Conversation implements basebot.Conversation {
   }
 
   async recv() {
+    this.termbot.rl.prompt();
     return await this.termbot.spool.wait(null);
   }
 
@@ -46,11 +47,13 @@ export class TerminalBot implements basebot.Bot {
     this.rl.prompt();
     this.rl.on('line', async (line: string) => {
       let text = line.trim();
-      await this.spool.fire(
+      let fired = await this.spool.fire(
         this, null, text, text,
         () => new Conversation(this, "user"),
       );
-      this.rl.prompt();
+      if (!fired) {
+        this.rl.prompt();
+      }
     });
   }
 

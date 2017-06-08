@@ -82,17 +82,20 @@ export class Spool<K, M> {
 
   /**
    * Invoke the appropriate callback for a message, or the `onconverse`
-   * handler for new conversations.
+   * handler for new conversations. Return a flag indicating whether a
+   * spooled callback was fired.
    */
   async fire(bot: Bot, key: K, message: M, text: string,
-             mkconv: () => Conversation) {
+             mkconv: () => Conversation): Promise<boolean> {
     let cbk = this.dispatch(key, message);
     if (cbk) {
       // Existing conversation.
       cbk(message);
+      return true;
     } else if (bot.onconverse) {
       // New conversation.
       await bot.onconverse(text, mkconv());
     }
+    return false;
   }
 }
