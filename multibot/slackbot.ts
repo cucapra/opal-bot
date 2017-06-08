@@ -151,10 +151,7 @@ export class SlackBot implements basebot.Bot {
    */
   public waiters: [string, MessageHandler][] = [];
 
-  /**
-   * A handler for messages that no one's waiting for.
-   */
-  public convHandler: basebot.ConversationHandler | null = null;
+  public onconverse: basebot.ConversationHandler | null = null;
 
   /**
    * Construct a bot by creating a Slack RTM client object and attach this
@@ -197,10 +194,10 @@ export class SlackBot implements basebot.Bot {
         }
       } else {
         // No one is waiting for this message.
-        if (this.convHandler && this.ims.get(message.channel)) {
+        if (this.onconverse && this.ims.get(message.channel)) {
           // This is a private message. (Eventually, we should also handle
           // mentions.) Call the conversation handler.
-          this.convHandler(
+          this.onconverse(
             message.text,
             new Conversation(this, message.channel, message.user)
           );
@@ -249,12 +246,5 @@ export class SlackBot implements basebot.Bot {
     return new Promise((resolve, reject) => {
       this.waiters.push([channel_id, resolve]);
     });
-  }
-
-  /**
-   * Handle (directed) messages that no one else wants.
-   */
-  onConverse(handler: basebot.ConversationHandler) {
-    this.convHandler = handler;
   }
 }

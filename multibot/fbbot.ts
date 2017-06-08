@@ -48,9 +48,7 @@ interface Message {
  */
 export class FacebookBot implements basebot.Bot {
   public msgr: Messenger;
-
-  public convHandler: basebot.ConversationHandler | null = null;
-
+  public onconverse: basebot.ConversationHandler | null;
   public spool = new basebot.Spool<string, Message>();
 
   /**
@@ -65,10 +63,10 @@ export class FacebookBot implements basebot.Bot {
 
     this.msgr.on('message', (event) => {
       let handled = this.spool.dispatch(event.sender.id, event.message);
-      if (!handled && this.convHandler) {
+      if (!handled && this.onconverse) {
         // New conversation.
         let conv = new Conversation(this, event.sender.id);
-        this.convHandler(event.message.text, conv);
+        this.onconverse(event.message.text, conv);
       }
     });
   }
@@ -79,9 +77,5 @@ export class FacebookBot implements basebot.Bot {
    */
   handler() {
     return this.msgr.middleware();
-  }
-
-  onConverse(cbk: basebot.ConversationHandler) {
-    this.convHandler = cbk;
   }
 }

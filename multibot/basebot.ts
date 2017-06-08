@@ -43,7 +43,7 @@ export interface Bot {
   /**
    * Register a callback for new conversations.
    */
-  onConverse(handler: ConversationHandler): void;
+  onconverse: ConversationHandler | null;
 }
 
 /**

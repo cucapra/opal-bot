@@ -34,10 +34,7 @@ export class TerminalBot implements basebot.Bot {
   public waiters: MessageHandler[] = [];
   public rl: readline.ReadLine;
 
-  /**
-   * A handler for messages that no one's waiting for.
-   */
-  public convHandler: basebot.ConversationHandler | null = null;
+  public onconverse: basebot.ConversationHandler | null = null;
 
   /**
    * Wait for terminal input and dispatch it.
@@ -58,8 +55,8 @@ export class TerminalBot implements basebot.Bot {
         await callback(text);
       } else {
         // Start a new converstion.
-        if (this.convHandler) {
-          await this.convHandler(text, new Conversation(this, "user"));
+        if (this.onconverse) {
+          await this.onconverse(text, new Conversation(this, "user"));
         }
       }
       this.rl.prompt();
@@ -81,12 +78,5 @@ export class TerminalBot implements basebot.Bot {
    */
   print(message: string) {
     process.stdout.write('<<< ' + message + '\n');
-  }
-
-  /**
-   * Set the handler for new conversations.
-   */
-  onConverse(handler: basebot.ConversationHandler) {
-    this.convHandler = handler;
   }
 }

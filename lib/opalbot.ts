@@ -108,9 +108,9 @@ export class OpalBot {
    * Register this bot's callbacks with a connection.
    */
   register(bot: Bot) {
-    bot.onConverse(async (text, conv) => {
+    bot.onconverse = async (text, conv) => {
       await this.interact(text, conv);
-    });
+    };
   }
 
   /**
