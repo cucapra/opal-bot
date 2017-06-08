@@ -62,7 +62,7 @@ export class FacebookBot implements basebot.Bot {
     });
 
     this.msgr.on('message', (event) => {
-      let cbk = this.spool.dispatch(event.sender.id, event.message);
+      let cbk = this.spool.fire(event.sender.id, event.message);
       if (cbk) {
         // Existing conversation.
         cbk(event.message);

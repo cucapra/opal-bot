@@ -65,7 +65,7 @@ export class Spool<K, M> {
   /**
    * Dispatch a message on a channel. 
    */
-  dispatch(key: K, message: M): ((message: M) => void) | null {
+  fire(key: K, message: M): ((message: M) => void) | null {
     // Check whether there's a callback waiting for this message and,
     // if so, remove it.
     for (let [i, [k, cbk]] of this.waiters.entries()) {

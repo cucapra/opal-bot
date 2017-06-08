@@ -46,7 +46,7 @@ export class TerminalBot implements basebot.Bot {
     this.rl.prompt();
     this.rl.on('line', async (line: string) => {
       let text = line.trim();
-      let cbk = this.spool.dispatch(null, text);
+      let cbk = this.spool.fire(null, text);
       if (cbk) {
         await cbk(text);
       } else if (this.onconverse) {
