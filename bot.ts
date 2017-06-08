@@ -3,10 +3,6 @@ import * as Loki from 'lokijs';
 
 import { OpalBot } from './lib/opalbot';
 
-const SLACK_TOKEN = process.env['SLACK_BOT_TOKEN'] || '';
-const WIT_TOKEN = process.env['WIT_ACCESS_TOKEN'] || '';
-const FB_PAGE_TOKEN = process.env['FB_PAGE_TOKEN'] || '';
-const FB_VERIFY_TOKEN = process.env['FB_VERIFY_TOKEN'] || '';
 const STATUS_CHAN = 'bot-status';
 const DB_NAME = 'store.json';
 
@@ -24,17 +20,35 @@ function openDB(filename: string): Promise<Loki> {
  * Run the bot.
  */
 async function main() {
+  let wit_token = process.env['WIT_ACCESS_TOKEN'];
+  if (!wit_token) {
+    console.error("missing WIT_TOKEN");
+    return;
+  }
   let bot = new OpalBot(
-    new Wit({ accessToken: WIT_TOKEN }),
+    new Wit({ accessToken: wit_token }),
     await openDB(DB_NAME),
   );
 
   if (process.argv[2] === '-t') {
+    // Terminal.
     bot.runTerminal();
   } else if (process.argv[2] == '-f') {
-    bot.runFacebook(FB_PAGE_TOKEN, FB_VERIFY_TOKEN, 4915);
+    // Facebook Messenger.
+    let fb_page_token = process.env['FB_PAGE_TOKEN'];
+    let fb_verify_token = process.env['FB_VERIFY_TOKEN'];
+    if (!fb_page_token || !fb_verify_token) {
+      console.error("missing FB_PAGE_TOKEN or FB_VERIFY_TOKEN");
+    }
+    bot.runFacebook(fb_page_token, fb_verify_token, 5000);
   } else {
-    bot.connectSlack(SLACK_TOKEN, STATUS_CHAN);
+    // Slack.
+    let slack_token = process.env['SLACK_BOT_TOKEN'];
+    if (slack_token) {
+      bot.connectSlack(slack_token, STATUS_CHAN);
+    } else {
+      console.error("missing SLACK_BOT_TOKEN");
+    }
   }
 }
 
