@@ -97,6 +97,9 @@ export class OpalBot {
    */
   runFacebook(token: string, verify: string, port: number) {
     let fb = new FacebookBot(token, verify);
+    this.register(fb);
+
+    // Start an HTTP server with this handler.
     let server = http.createServer(fb.handler());
     server.listen(port);
   }
