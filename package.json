@@ -12,7 +12,8 @@
     "minimist": "^1.2.0",
     "node-fetch": "^1.7.0",
     "node-wit": "^4.2.0",
-    "url-regex": "^4.1.0"
+    "url-regex": "^4.1.0",
+    "uuid": "^3.0.1"
   },
   "devDependencies": {
     "@types/lokijs": "^1.2.30",
@@ -20,6 +21,7 @@
     "@types/node": "^7.0.22",
     "@types/node-fetch": "^1.6.7",
     "@types/node-wit": "^4.2.2",
+    "@types/uuid": "^3.0.0",
     "typescript": "^2.3.4"
   },
   "bin": {
