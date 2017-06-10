@@ -3,7 +3,6 @@
  */
 
 import fetch from 'node-fetch';
-import * as uuid from 'uuid';
 import { URLSearchParams } from 'url';
 
 const ICLOUD_URL = "https://www.icloud.com";
@@ -15,25 +14,12 @@ async function main() {
   let apple_id = process.argv[2];
   let password = process.argv[3];
 
-  // I'm not sure what clientBuildNumber is supposed to mean, but it's
-  // apparently necessary... this one stolen from a Google search.
-  let clientBuildNumber = '1P24';
-
-  // The client ID is apparently a UUID in all caps.
-  let clientId = uuid.v1().toString().toUpperCase();
-
   let body = {
     apple_id,
     password,
   };
 
-  let params = {
-    clientBuildNumber,
-    clientId,
-  };
-  let qs = (new URLSearchParams(params)).toString();
-
-  let url = SETUP_URL + '/login' + '?' + qs;
+  let url = SETUP_URL + '/login';
   let resp = await fetch(url, {
     method: "POST",
     body: JSON.stringify(body),
