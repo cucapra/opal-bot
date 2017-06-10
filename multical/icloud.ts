@@ -19,18 +19,19 @@ async function main() {
     password,
   };
 
-  let url = SETUP_URL + '/login';
-  let resp = await fetch(url, {
+  let headers = {
+    // The iCloud API appears to require the Origin header to be set to the
+    // iCloud URL.
+    'Origin': ICLOUD_URL,
+
+    // Just for politeness.
+    'User-Agent': USER_AGENT,
+  };
+
+  let resp = await fetch(SETUP_URL + '/login', {
     method: "POST",
     body: JSON.stringify(body),
-    headers: {
-      // The iCloud API appears to require the Origin header to be set to the
-      // iCloud URL.
-      'Origin': ICLOUD_URL,
-
-      // Just for politeness.
-      'User-Agent': USER_AGENT,
-    },
+    headers,
   });
 
   // General iCloud API errors.
@@ -44,7 +45,28 @@ async function main() {
     return;
   }
 
-  console.log(await resp.text());
+  let sessionInfo = JSON.parse(await resp.text());
+
+  let use2fa: boolean = sessionInfo['hsaChallengeRequired'];
+  if (use2fa) {
+    console.log("Two-factor.");
+
+    let resp1 = await fetch(SETUP_URL + '/listDevices', { headers });
+    if (!resp1.ok) {
+      console.error(await resp1.text());
+      return;
+    }
+    let devices = JSON.parse(await resp1.text())['devices'];
+    console.log(devices);
+
+    let device = devices[0];
+    let resp2 = await fetch(SETUP_URL + '/sendVerificationCode', {
+      method: "POST",
+      body: JSON.stringify(device),
+      headers,
+    });
+    console.log(await resp2.text());
+  }
 }
 
 main();
