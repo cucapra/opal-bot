@@ -45,6 +45,7 @@ function parseEvent(ics: string) {
   for (let event of calendar.getEvents(cal)) {
     return event;
   }
+  throw "no event in calendar";
 }
 
 /**
@@ -110,9 +111,7 @@ class Client {
     for (let response of data['multistatus']['response']) {
       let ics = response['propstat'][0]['prop'][0]['calendar-data'][0]['_'];
       let event = parseEvent(ics);
-      if (event) {
-        console.log(event.summary);
-      }
+      console.log(event.summary);
     }
   }
 }
