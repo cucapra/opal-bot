@@ -13,6 +13,7 @@
     "node-fetch": "^1.7.0",
     "node-wit": "^4.2.0",
     "url-regex": "^4.1.0",
+    "xml2js": "^0.4.17"
   },
   "devDependencies": {
     "@types/lokijs": "^1.2.30",
@@ -20,6 +21,7 @@
     "@types/node": "^7.0.22",
     "@types/node-fetch": "^1.6.7",
     "@types/node-wit": "^4.2.2",
+    "@types/xml2js": "^0.0.33",
     "typescript": "^2.3.4"
   },
   "bin": {

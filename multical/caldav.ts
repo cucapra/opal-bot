@@ -1,4 +1,5 @@
 import fetch from 'node-fetch';
+import * as xml2js from 'xml2js';
 
 const QUERY_XML = `<?xml version="1.0" encoding="utf-8" ?>
 <C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
@@ -22,6 +23,18 @@ function basicauth(username: string, password: string): string {
   return 'Basic ' + base64encode(username + ":" + password);
 }
 
+function parseXML(s: string): Promise<any> {
+  return new Promise((resolve, reject) => {
+    xml2js.parseString(s, (err, res) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(res);
+      }
+    });
+  });
+}
+
 async function getSomeEvents(url: string, username: string, password: string)
 {
   let res = await fetch(url, {
@@ -33,9 +46,20 @@ async function getSomeEvents(url: string, username: string, password: string)
     },
     body: QUERY_XML,
   });
-  console.log(res.status);
-  console.log(res.headers);
-  console.log(await res.text());
+  if (!res.ok) {
+    throw "error communicating with CalDAV server";
+  }
+  let data = await parseXML(await res.text());
+
+  // The response XML document has this form:
+  // <multistatus>
+  //   <response><propstat><prop><calendar-data>[ICS HERE]
+  //   ...
+  // </multistatus>
+  for (let response of data['multistatus']['response']) {
+    let ics = response['propstat'][0]['prop'][0]['calendar-data'][0]['_'];
+    console.log(ics);
+  }
 }
 
 getSomeEvents(process.argv[2], process.argv[3], process.argv[4]);
