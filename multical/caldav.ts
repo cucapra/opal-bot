@@ -77,37 +77,47 @@ function rangeQuery(start: moment.Moment, end: moment.Moment) {
 </C:calendar-query>`;
 };
 
-async function getSomeEvents(url: string, username: string, password: string)
-{
-  let start = moment();
-  let end = moment().add(7, 'days');
+/**
+ * A client for a specific CalDAV calendar.
+ */
+class Client {
+  constructor(
+    public url: string,
+    public username: string,
+    public password: string,
+  ) {}
 
-  let res = await fetch(url, {
-    method: 'REPORT',
-    headers: {
-      'Content-Type': 'text/xml',
-      'Authorization': basicauth(username, password),
-      'User-Agent': 'opal/1.0.0',
-    },
-    body: rangeQuery(start, end),
-  });
-  if (!res.ok) {
-    throw "error communicating with CalDAV server";
-  }
-  let data = await parseXML(await res.text());
+  async getSomeEvents(start: moment.Moment, end: moment.Moment) {
+    let res = await fetch(this.url, {
+      method: 'REPORT',
+      headers: {
+        'Content-Type': 'text/xml',
+        'Authorization': basicauth(this.username, this.password),
+        'User-Agent': 'opal/1.0.0',
+      },
+      body: rangeQuery(start, end),
+    });
+    if (!res.ok) {
+      throw "error communicating with CalDAV server";
+    }
+    let data = await parseXML(await res.text());
 
-  // The response XML document has this form:
-  // <multistatus>
-  //   <response><propstat><prop><calendar-data>[ICS HERE]
-  //   ...
-  // </multistatus>
-  for (let response of data['multistatus']['response']) {
-    let ics = response['propstat'][0]['prop'][0]['calendar-data'][0]['_'];
-    let event = parseEvent(ics);
-    if (event) {
-      console.log(event.summary);
+    // The response XML document has this form:
+    // <multistatus>
+    //   <response><propstat><prop><calendar-data>[ICS HERE]
+    //   ...
+    // </multistatus>
+    for (let response of data['multistatus']['response']) {
+      let ics = response['propstat'][0]['prop'][0]['calendar-data'][0]['_'];
+      let event = parseEvent(ics);
+      if (event) {
+        console.log(event.summary);
+      }
     }
   }
 }
 
-getSomeEvents(process.argv[2], process.argv[3], process.argv[4]);
+// Smoke test.
+new Client(process.argv[2], process.argv[3], process.argv[4]).getSomeEvents(
+  moment(), moment().add(7, 'days')
+);
