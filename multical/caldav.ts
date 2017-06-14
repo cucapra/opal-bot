@@ -2,8 +2,14 @@ import fetch from 'node-fetch';
 import * as xml2js from 'xml2js';
 import * as ical from 'ical.js';
 import * as calendar from '../lib/calendar';
+import * as moment from 'moment';
 
-const QUERY_XML = `<?xml version="1.0" encoding="utf-8" ?>
+function davtime(t: moment.Moment) {
+  return t.format('YYYYMMDD[T]HHmmss[Z]');
+}
+
+function range_query(start: moment.Moment, end: moment.Moment) {
+  return `<?xml version="1.0" encoding="utf-8" ?>
 <C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
   <D:prop>
     <C:calendar-data/>
@@ -11,11 +17,12 @@ const QUERY_XML = `<?xml version="1.0" encoding="utf-8" ?>
   <C:filter>
     <C:comp-filter name="VCALENDAR">
       <C:comp-filter name="VEVENT">
-        <C:time-range start="20170101T120000Z" end="20170115T120000Z"/>
+        <C:time-range start="${davtime(start)}" end="${davtime(end)}"/>
       </C:comp-filter>
     </C:comp-filter>
   </C:filter>
 </C:calendar-query>`;
+};
 
 function base64encode(s: string) {
   return new Buffer(s).toString('base64');
@@ -46,6 +53,10 @@ function firstEvent(ics: string) {
 
 async function getSomeEvents(url: string, username: string, password: string)
 {
+  let start = moment();
+  let end = moment().add(7, 'days');
+  let query_xml = range_query(start, end);
+
   let res = await fetch(url, {
     method: 'REPORT',
     headers: {
@@ -53,7 +64,7 @@ async function getSomeEvents(url: string, username: string, password: string)
       'Authorization': basicauth(username, password),
       'User-Agent': 'opal/1.0.0',
     },
-    body: QUERY_XML,
+    body: query_xml,
   });
   if (!res.ok) {
     throw "error communicating with CalDAV server";
