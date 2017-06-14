@@ -88,7 +88,10 @@ class Client {
     public password: string,
   ) {}
 
-  async getSomeEvents(start: moment.Moment, end: moment.Moment) {
+  /**
+   * Fetch events from the calendar between a pair of times.
+   */
+  async getEvents(start: moment.Moment, end: moment.Moment) {
     let res = await fetch(this.url, {
       method: 'REPORT',
       headers: {
@@ -108,15 +111,21 @@ class Client {
     //   <response><propstat><prop><calendar-data>[ICS HERE]
     //   ...
     // </multistatus>
+    let events = [];
     for (let response of data['multistatus']['response']) {
       let ics = response['propstat'][0]['prop'][0]['calendar-data'][0]['_'];
-      let event = parseEvent(ics);
-      console.log(event.summary);
+      events.push(parseEvent(ics));
     }
+    return events;
   }
 }
 
 // Smoke test.
-new Client(process.argv[2], process.argv[3], process.argv[4]).getSomeEvents(
-  moment(), moment().add(7, 'days')
-);
+async function main() {
+  let c = new Client(process.argv[2], process.argv[3], process.argv[4]);
+  let es = await c.getEvents(moment(), moment().add(7, 'days'));
+  for (let e of es) {
+    console.log(e.summary);
+  }
+}
+main();
