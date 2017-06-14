@@ -1,5 +1,7 @@
 import fetch from 'node-fetch';
 import * as xml2js from 'xml2js';
+import * as ical from 'ical.js';
+import * as calendar from '../lib/calendar';
 
 const QUERY_XML = `<?xml version="1.0" encoding="utf-8" ?>
 <C:calendar-query xmlns:D="DAV:" xmlns:C="urn:ietf:params:xml:ns:caldav">
@@ -35,6 +37,13 @@ function parseXML(s: string): Promise<any> {
   });
 }
 
+function firstEvent(ics: string) {
+  let cal = calendar.parse(ics);
+  for (let event of calendar.getEvents(cal)) {
+    return event;
+  }
+}
+
 async function getSomeEvents(url: string, username: string, password: string)
 {
   let res = await fetch(url, {
@@ -58,7 +67,10 @@ async function getSomeEvents(url: string, username: string, password: string)
   // </multistatus>
   for (let response of data['multistatus']['response']) {
     let ics = response['propstat'][0]['prop'][0]['calendar-data'][0]['_'];
-    console.log(ics);
+    let event = firstEvent(ics);
+    if (event) {
+      console.log(event.summary);
+    }
   }
 }
 
