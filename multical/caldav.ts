@@ -119,13 +119,3 @@ class Client {
     return events;
   }
 }
-
-// Smoke test.
-async function main() {
-  let c = new Client(process.argv[2], process.argv[3], process.argv[4]);
-  let es = await c.getEvents(moment(), moment().add(7, 'days'));
-  for (let e of es) {
-    console.log(e.summary);
-  }
-}
-main();
