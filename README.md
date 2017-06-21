@@ -9,9 +9,9 @@ A fledgling calendar bot to showcase Opal. It currently connects to [Slack][] an
 Here's how to get it running:
 
 1. `npm install` (or `yarn`) and then `tsc`.
-2. Obtain a [Slack bot access token][slackbot]. Put this in the `WIT_ACCESS_TOKEN` environment variable.
-3. To run on Facebook Messenger too, do the incredibly complicated dance to obtain Facebook credentials. Set the `FB_PAGE_TOKEN` variable for your bot and the `FB_VERIFY_TOKEN` variable to the string you chose when setting up your webhook.
-4. Obtain a [Wit][] API token. Put this in the `SLACK_BOT_TOKEN` environment variable.
+2. Obtain a [Wit][] API token. Put this in the `WIT_ACCESS_TOKEN` environment variable.
+3. Obtain a [Slack bot access token][slackbot]. Put this in the `SLACK_BOT_TOKEN` environment variable.
+4. To run on Facebook Messenger too, do the incredibly complicated dance to obtain Facebook credentials. Set the `FB_PAGE_TOKEN` variable for your bot and the `FB_VERIFY_TOKEN` variable to the string you chose when setting up your webhook.
 5. Run `node build/bot.js`. Use `-s` to run on Slack or `-f` to run on Facebook. (Both can work at once.)
 
 [slackbot]: https://api.slack.com/bot-users
