@@ -4,8 +4,12 @@
 
 import * as http from 'http';
 
-export type Handler = (req: http.IncomingMessage, res: http.ServerResponse) => void;
+export type Handler = (req: http.IncomingMessage,
+  res: http.ServerResponse) => void;
 export type Params = { [key: string]: string };
+export type RouteHandler = (req: http.IncomingMessage,
+  res: http.ServerResponse,
+  params: Params) => void;
 
 // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
 function escapeRegExp(s: string) {
@@ -20,7 +24,7 @@ export class Route {
   constructor(
     public method: string,
     pattern: string,
-    public handler: Handler,
+    public handler: RouteHandler,
   ) {
     this.pattern = pattern.toUpperCase();
 
@@ -45,15 +49,16 @@ export class Route {
 
   public match(req: http.IncomingMessage): Params | null {
     if (req.method && req.method.toUpperCase() == this.method && req.url) {
-      const params = this.regex.exec(req.url);
-      if (params) {
-        let namedParams: Params = {};
-
+      const match = this.regex.exec(req.url);
+      console.log(match);
+      if (match) {
         // Pack regex capture groups into a key/value mapping.
+        let params: Params = {};
         this.paramNames.forEach((name, i) => {
-          namedParams[name] = params[i];
+          params[name] = match[i + 1];
         });
-        return namedParams;
+        console.log(params);
+        return params;
       }
     }
     return null;
@@ -69,8 +74,9 @@ export function dispatch(routes: Route[], notFound=notFoundHandler): Handler {
   return (req, res) => {
     // Try dispatching to each route.
     for (let route of routes) {
-      if (route.match(req)) {
-        route.handler(req, res);
+      let params = route.match(req);
+      if (params) {
+        route.handler(req, res, params);
         return;
       }
     }

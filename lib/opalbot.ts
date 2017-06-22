@@ -87,8 +87,8 @@ export class OpalBot {
    * EXPERIMENTAL: Run the configuration Web server.
    */
   runWeb(port: number) {
-    let r = new route.Route('GET', '/foo', (req, res) => {
-      res.end('hi');
+    let r = new route.Route('GET', '/foo/:bar', (req, res, params) => {
+      res.end(`hi, ${params['bar']}`);
     });
     let server = http.createServer(route.dispatch([r]));
     server.listen(port, () => {
