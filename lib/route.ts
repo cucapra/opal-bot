@@ -5,6 +5,7 @@
 import * as http from 'http';
 
 export type Handler = (req: http.IncomingMessage, res: http.ServerResponse) => void;
+export type Params = { [key: string]: string };
 
 // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
 function escapeRegExp(s: string) {
@@ -14,6 +15,7 @@ function escapeRegExp(s: string) {
 export class Route {
   public regex: RegExp;
   public pattern: string;
+  public paramNames: string[];
 
   constructor(
     public method: string,
@@ -21,15 +23,40 @@ export class Route {
     public handler: Handler,
   ) {
     this.pattern = pattern.toUpperCase();
-    this.regex = new RegExp('^' + escapeRegExp(pattern) + '$');
+
+    // Find patterns like :pat in the pattern. Replace them with regex
+    // capture groups.
+    this.paramNames = [];
+    let patternRegex = "";
+    let isParam = false;
+    for (let part of pattern.split(/:(\w[\w\d]*)/)) {
+      if (isParam) {
+        this.paramNames.push(part);
+        patternRegex += '([^/]*)';
+      } else {
+        patternRegex += escapeRegExp(part);
+      }
+      isParam = !isParam;
+    }
+
+    // Match the whole string.
+    this.regex = new RegExp('^' + patternRegex + '$');
   }
 
-  public match(req: http.IncomingMessage) {
-    if (req.method && req.method.toUpperCase() == this.method &&
-        req.url && this.regex.test(req.url)) {
-      return true;
+  public match(req: http.IncomingMessage): Params | null {
+    if (req.method && req.method.toUpperCase() == this.method && req.url) {
+      const params = this.regex.exec(req.url);
+      if (params) {
+        let namedParams: Params = {};
+
+        // Pack regex capture groups into a key/value mapping.
+        this.paramNames.forEach((name, i) => {
+          namedParams[name] = params[i];
+        });
+        return namedParams;
+      }
     }
-    return false;
+    return null;
   }
 }
 
