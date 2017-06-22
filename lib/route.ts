@@ -69,6 +69,8 @@ export function notFound(req: http.IncomingMessage, res: http.ServerResponse) {
 
 export function dispatch(routes: Route[], notFoundHandler=notFound): Handler {
   return async (req, res) => {
+    console.log(`${req.method} ${req.url}`);
+
     // Try dispatching to each route.
     for (let route of routes) {
       let params = route.match(req);
