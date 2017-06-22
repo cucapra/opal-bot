@@ -23,8 +23,9 @@ import { findURL, gitSummary, IVars, randomString } from './util';
  */
 interface User {
   slack_id: string;
-  icloud?: {
-    appleid: string;
+  caldav?: {
+    url: string;
+    username: string;
     password: string;
   };
 }
@@ -172,20 +173,21 @@ export class OpalBot {
   async getSettings(conv: Conversation, force=false) {
     let user = this.getUser(conv);
     if (!force) {
-      if (user.icloud) {
-        return "icloud";
+      if (user.caldav) {
+        return "caldav";
       }
     }
 
     let resp = await this.gatherSettings(conv);
-    if (resp['service'] === 'icloud') {
-      user.icloud = {
-        'appleid': resp['appleid'],
+    if (resp['service'] === 'caldav') {
+      user.caldav = {
+        'url': resp['url'],
+        'username': resp['username'],
         'password': resp['password'],
       };
       this.users.update(user);
       this.db.saveDatabase();
-      return "icloud";
+      return "caldav";
     }
   }
 

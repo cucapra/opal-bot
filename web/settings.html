@@ -4,19 +4,24 @@
     <title>settings</title>
 </head>
 <body>
-    <h3>iCloud</h3>
+    <h3>CalDAV (including iCloud)</h3>
     <form action="" method="POST">
-        <input type="hidden" name="service" value="icloud">
+        <input type="hidden" name="service" value="caldav">
 
         <p>
-            <label for="appleid">Apple ID</label>
-            <input type="text" name="appleid">
+            <label for="url">CalDAV URL</label>
+            <input type="url" name="url">
+        </p>
+
+        <p>
+            <label for="username">Username (e.g., Apple ID)</label>
+            <input type="text" name="username">
         </p>
 
         <p>
             <label for="password">Password</label>
             <input type="password" name="password">
-            (Use a one-time password if you have 2FA enabled.)
+            (Use a one-time password if you have iCloud 2FA enabled.)
         </p>
 
         <p>
