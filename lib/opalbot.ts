@@ -23,7 +23,10 @@ import { findURL, gitSummary, IVars, randomString } from './util';
  */
 interface User {
   slack_id: string;
-  calendar_url?: string;
+  icloud?: {
+    appleid: string;
+    password: string;
+  };
 }
 
 /**
@@ -163,8 +166,25 @@ export class OpalBot {
   async gatherSettings(conv: Conversation) {
     let token = randomString();
     conv.send(`please fill out the form at ${this.webURL}/settings/${token}`);
-    let config = await this.webSessions.get(token);
-    console.log(config);
+    return await this.webSessions.get(token);
+  }
+
+  async getSettings(conv: Conversation, force=false) {
+    let user = this.getUser(conv);
+    if (!force) {
+      if (user.icloud) {
+        return "icloud";
+      }
+    }
+
+    let resp = await this.gatherSettings(conv);
+    if (resp['service'] === 'icloud') {
+      user.icloud = {
+        'appleid': resp['appleid'],
+        'password': resp['password'],
+      };
+      return "icloud";
+    }
   }
 
   /**
@@ -193,6 +213,10 @@ export class OpalBot {
    */
   async handle_show_calendar(conv: Conversation) {
     conv.send("let's get your calendar!");
+    let settings = await this.getSettings(conv);
+    if (settings) {
+      conv.send(settings);
+    }
   }
 
   /**
@@ -207,7 +231,8 @@ export class OpalBot {
    * Conversation where the user wants to set up their calendar settings.
    */
   async handle_setup_calendar(conv: Conversation) {
-    await this.gatherSettings(conv);
+    await this.getSettings(conv, true);
+    conv.send("ok, all set!");
   }
 
   /**
