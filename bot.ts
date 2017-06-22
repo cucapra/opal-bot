@@ -38,6 +38,8 @@ async function main() {
     alias: { 'term': ['t'], 'fb': ['f'], 'slack': ['s'] },
   });
 
+  bot.runWeb(1234);
+
   // Slack.
   if (opts['slack']) {
     let slack_token = process.env['SLACK_BOT_TOKEN'];

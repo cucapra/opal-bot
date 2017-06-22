@@ -9,6 +9,7 @@ import { TerminalBot } from '../multibot/termbot';
 import { FacebookBot } from '../multibot/fbbot';
 import { Wit } from 'node-wit';
 import * as wit from './wit';
+import * as route from './route';
 import * as http from 'http';
 
 import fetch from 'node-fetch';
@@ -80,6 +81,19 @@ export class OpalBot {
     // Start an HTTP server with this handler.
     let server = http.createServer(fb.handler());
     server.listen(port);
+  }
+
+  /**
+   * EXPERIMENTAL: Run the configuration Web server.
+   */
+  runWeb(port: number) {
+    let r = route.route('GET', /^\/foo/, (req, res) => {
+      res.end('hi');
+    });
+    let server = http.createServer(route.dispatch([r]));
+    server.listen(port, () => {
+      console.log(`web interface running at http://localhost:${port}`);
+    });
   }
 
   /**
