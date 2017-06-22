@@ -46,17 +46,15 @@ export class Route {
     this.regex = new RegExp('^' + patternRegex + '$');
   }
 
-  public match(req: http.IncomingMessage): Params | null {
-    if (req.url) {
-      const match = this.regex.exec(req.url);
-      if (match) {
-        // Pack regex capture groups into a key/value mapping.
-        let params: Params = {};
-        this.paramNames.forEach((name, i) => {
-          params[name] = match[i + 1];
-        });
-        return params;
-      }
+  public match(url: string): Params | null {
+    const match = this.regex.exec(url);
+    if (match) {
+      // Pack regex capture groups into a key/value mapping.
+      let params: Params = {};
+      this.paramNames.forEach((name, i) => {
+        params[name] = match[i + 1];
+      });
+      return params;
     }
     return null;
   }
@@ -72,11 +70,13 @@ export function dispatch(routes: Route[], notFoundHandler=notFound): Handler {
     console.log(`${req.method} ${req.url}`);
 
     // Try dispatching to each route.
-    for (let route of routes) {
-      let params = route.match(req);
-      if (params) {
-        await route.handler(req, res, params);
-        return;
+    if (req.url) {
+      for (let route of routes) {
+        let params = route.match(req.url);
+        if (params) {
+          await route.handler(req, res, params);
+          return;
+        }
       }
     }
 
