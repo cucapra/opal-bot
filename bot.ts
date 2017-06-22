@@ -38,7 +38,8 @@ async function main() {
     alias: { 'term': ['t'], 'fb': ['f'], 'slack': ['s'] },
   });
 
-  bot.runWeb(1234);
+  // Start the configuration server.
+  await bot.runWeb(1234);
 
   // Slack.
   if (opts['slack']) {

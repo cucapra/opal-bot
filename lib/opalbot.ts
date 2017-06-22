@@ -41,6 +41,11 @@ export class OpalBot {
    */
   public webSessions = new IVars<route.Params>();
 
+  /**
+   * The configuration server URL (if it's running).
+   */
+  public webURL: string | null = null;
+
   constructor(
     public wit: Wit,
     public db: Loki,
@@ -94,7 +99,7 @@ export class OpalBot {
   /**
    * EXPERIMENTAL: Run the configuration Web server.
    */
-  runWeb(port: number, rsrcdir='web') {
+  runWeb(port: number, rsrcdir='web'): Promise<void> {
     let routes = [
       new route.Route('GET', '/settings/:token', async (req, res, params) => {
         webutil.sendfile(res, path.join(rsrcdir, 'settings.html'));
@@ -113,8 +118,13 @@ export class OpalBot {
       }),
     ];
     let server = http.createServer(route.dispatch(routes));
-    server.listen(port, () => {
-      console.log(`web interface running at http://localhost:${port}`);
+
+    return new Promise<void>((resolve, reject) => {
+      server.listen(port, () => {
+        this.webURL = `http://localhost:${port}`;
+        console.log(`web interface running at ${this.webURL}`);
+        resolve();
+      });
     });
   }
 
