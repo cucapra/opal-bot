@@ -3,6 +3,7 @@
  */
 
 import * as http from 'http';
+import { URL } from 'url';
 
 export type Handler = (req: http.IncomingMessage,
   res: http.ServerResponse) => void;
@@ -69,10 +70,13 @@ export function dispatch(routes: Route[], notFoundHandler=notFound): Handler {
   return async (req, res) => {
     console.log(`${req.method} ${req.url}`);
 
-    // Try dispatching to each route.
     if (req.url) {
+      // Get the non-query part of the URL.
+      let path = (new URL(req.url, 'http://example.com')).pathname;
+
+      // Try dispatching to each route.
       for (let route of routes) {
-        let params = route.match(req.url);
+        let params = route.match(path);
         if (params) {
           await route.handler(req, res, params);
           return;
