@@ -100,24 +100,28 @@ export class OpalBot {
    * EXPERIMENTAL: Run the configuration Web server.
    */
   runWeb(port: number, rsrcdir='web'): Promise<void> {
-    let routes = [
-      new route.Route('GET', '/settings/:token', async (req, res, params) => {
-        webutil.sendfile(res, path.join(rsrcdir, 'settings.html'));
-      }),
+    let r = new route.Route('/settings/:token', async (req, res, params) => {
+      // Make sure we have a valid token.
+      let token = params['token'];
+      if (!this.webSessions.has(token)) {
+        res.statusCode = 404;
+        res.end('invalid token');
+        return;
+      }
 
-      new route.Route('POST', '/settings/:token', async (req, res, params) => {
-        let token = params['token'];
-        if (this.webSessions.has(token)) {
-          let data = await webutil.formdata(req);
-          this.webSessions.put(token, data);
-          res.end('got it; thanks!');
-        } else {
-          res.statusCode = 404;
-          res.end('invalid token');
-        }
-      }),
-    ];
-    let server = http.createServer(route.dispatch(routes));
+      if (req.method === 'GET') {
+        // Send the form.
+        webutil.sendfile(res, path.join(rsrcdir, 'settings.html'));
+      } else if (req.method === 'POST') {
+        // Retrieve the settings.
+        let data = await webutil.formdata(req);
+        this.webSessions.put(token, data);
+        res.end('got it; thanks!');
+      } else {
+        route.notFound(req, res);
+      }
+    });
+    let server = http.createServer(route.dispatch([r]));
 
     return new Promise<void>((resolve, reject) => {
       server.listen(port, () => {

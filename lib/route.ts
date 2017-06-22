@@ -22,7 +22,6 @@ export class Route {
   public paramNames: string[];
 
   constructor(
-    public method: string,
     pattern: string,
     public handler: RouteHandler,
   ) {
@@ -48,7 +47,7 @@ export class Route {
   }
 
   public match(req: http.IncomingMessage): Params | null {
-    if (req.method && req.method.toUpperCase() == this.method && req.url) {
+    if (req.url) {
       const match = this.regex.exec(req.url);
       if (match) {
         // Pack regex capture groups into a key/value mapping.
@@ -63,12 +62,12 @@ export class Route {
   }
 }
 
-function notFoundHandler(req: http.IncomingMessage, res: http.ServerResponse) {
+export function notFound(req: http.IncomingMessage, res: http.ServerResponse) {
   res.statusCode = 404;
   res.end('not found');
 }
 
-export function dispatch(routes: Route[], notFound=notFoundHandler): Handler {
+export function dispatch(routes: Route[], notFoundHandler=notFound): Handler {
   return async (req, res) => {
     // Try dispatching to each route.
     for (let route of routes) {
@@ -80,6 +79,6 @@ export function dispatch(routes: Route[], notFound=notFoundHandler): Handler {
     }
 
     // No route matched.
-    notFound(req, res);
+    notFoundHandler(req, res);
   }
 }
