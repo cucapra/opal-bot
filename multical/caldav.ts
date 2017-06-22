@@ -1,7 +1,7 @@
 import fetch from 'node-fetch';
 import * as xml2js from 'xml2js';
 import * as ical from 'ical.js';
-import * as calendar from '../lib/calendar';
+import * as icsutil from './icsutil';
 import * as moment from 'moment';
 
 /**
@@ -41,8 +41,8 @@ function parseXML(s: string): Promise<any> {
  * calendar in it.
  */
 function parseEvent(ics: string) {
-  let cal = calendar.parse(ics);
-  for (let event of calendar.getEvents(cal)) {
+  let cal = icsutil.parse(ics);
+  for (let event of icsutil.getEvents(cal)) {
     return event;
   }
   throw "no event in calendar";

@@ -14,7 +14,6 @@ import * as http from 'http';
 import fetch from 'node-fetch';
 
 import { findURL, gitSummary } from './util';
-import * as calendar from './calendar';
 
 /**
  * Our data model for keeping track of users' data.
@@ -25,22 +24,6 @@ interface User {
 }
 
 /**
- * Get some events from a calendar as a string.
- */
-async function someEvents(cal: calendar.Calendar) {
-  // Get the bounds of the current week.
-  let [start, end] = calendar.thisWeek();
-
-  // Get events in the range.
-  let out = "";
-  for (let [event, time] of calendar.getOccurrences(cal, start, end)) {
-    let details = event.getOccurrenceDetails(time);
-    out += details.startDate.toString() + " " + event.summary + "\n";
-  }
-  return out.trim();
-}
-
-/**
  * The main logic for the Opal bot.
  */
 export class OpalBot {
@@ -48,11 +31,6 @@ export class OpalBot {
    * User settings, stored in the database.
    */
   public users: LokiCollection<User>;
-
-  /**
-   * Cached copies of the users' calendars, indexed by URL.
-   */
-  public calendars: Map<String, calendar.Calendar> = new Map();
 
   constructor(
     public wit: Wit,
@@ -157,26 +135,6 @@ export class OpalBot {
   }
 
   /**
-   * Get the calendar data for a calendar URL, either from the cache or from
-   * the network. `force` always downloads the data.
-   */
-  async getCalendarData(url: string, force = false) {
-    // TODO This should invalidate the cache after a timeout.
-    let cal = this.calendars.get(url);
-    if (cal && !force) {
-      return cal;
-    } else {
-      let resp = await fetch(url);
-      if (!resp.ok) {
-        throw `could not get calendar data (error ${resp.status})`;
-      }
-      let cal = calendar.parse(await resp.text());
-      this.calendars.set(url, cal);
-      return cal;
-    }
-  }
-
-  /**
    * Conversation with a greeting intent.
    */
   async handle_greeting(conv: Conversation) {
@@ -202,19 +160,6 @@ export class OpalBot {
    */
   async handle_show_calendar(conv: Conversation) {
     conv.send("let's get your calendar!");
-    let url = await this.getCalendarURL(conv);
-    if (url) {
-      let cal;
-      try {
-        cal = await this.getCalendarData(url);
-      } catch (e) {
-        console.error(e);
-        conv.send(`:flushed: ${e}`);
-        return;
-      }
-      let agenda = await someEvents(cal);
-      conv.send(agenda);
-    }
   }
 
   /**
