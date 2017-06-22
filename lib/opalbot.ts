@@ -16,6 +16,7 @@ import * as path from 'path';
 import fetch from 'node-fetch';
 import { findURL, gitSummary, IVars, randomString } from './util';
 import { Calendar } from '../multical/caldav';
+import * as moment from 'moment';
 
 /**
  * Our data model for keeping track of users' data.
@@ -27,6 +28,18 @@ interface User {
     username: string;
     password: string;
   };
+}
+
+/**
+ * Get a quick text summary of things on a calendar.
+ */
+async function getSomeEvents(cal: Calendar) {
+  let events = await cal.getEvents(moment(), moment().add(7, 'days'));
+  let out = [];
+  for (let event of events) {
+    out.push(event.summary);
+  }
+  return out.join('\n');
 }
 
 /**
@@ -226,7 +239,7 @@ export class OpalBot {
     conv.send("let's get your calendar!");
     let calendar = await this.getCalendar(conv);
     if (calendar) {
-      conv.send(calendar.url);
+      conv.send(await getSomeEvents(calendar));
     }
   }
 
