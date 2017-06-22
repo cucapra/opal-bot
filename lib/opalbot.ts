@@ -158,7 +158,7 @@ export class OpalBot {
    */
   async gatherSettings(conv: Conversation) {
     let token = randomString();
-    conv.send(`please fill out the form at ${token}`);
+    conv.send(`please fill out the form at ${this.webURL}/settings/${token}`);
     let config = await this.webSessions.get(token);
     console.log(config);
   }
