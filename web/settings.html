@@ -4,6 +4,24 @@
     <title>settings</title>
 </head>
 <body>
-    test
+    <h3>iCloud</h3>
+    <form action="" method="POST">
+        <input type="hidden" name="service" value="icloud">
+
+        <p>
+            <label for="appleid">Apple ID</label>
+            <input type="text" name="appleid">
+        </p>
+
+        <p>
+            <label for="password">Password</label>
+            <input type="password" name="password">
+            (Use a one-time password if you have 2FA enabled.)
+        </p>
+
+        <p>
+            <input type="submit" value="Log In">
+        </p>
+    </form>
 </body>
 </html>

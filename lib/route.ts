@@ -9,7 +9,7 @@ export type Handler = (req: http.IncomingMessage,
 export type Params = { [key: string]: string };
 export type RouteHandler = (req: http.IncomingMessage,
   res: http.ServerResponse,
-  params: Params) => void;
+  params: Params) => Promise<void>;
 
 // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
 function escapeRegExp(s: string) {
@@ -69,12 +69,12 @@ function notFoundHandler(req: http.IncomingMessage, res: http.ServerResponse) {
 }
 
 export function dispatch(routes: Route[], notFound=notFoundHandler): Handler {
-  return (req, res) => {
+  return async (req, res) => {
     // Try dispatching to each route.
     for (let route of routes) {
       let params = route.match(req);
       if (params) {
-        route.handler(req, res, params);
+        await route.handler(req, res, params);
         return;
       }
     }

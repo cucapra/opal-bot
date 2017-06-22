@@ -11,7 +11,7 @@ import { Wit } from 'node-wit';
 import * as wit from './wit';
 import * as route from './route';
 import * as http from 'http';
-import * as fs from 'fs';
+import * as webutil from './webutil';
 import * as path from 'path';
 
 import fetch from 'node-fetch';
@@ -89,13 +89,18 @@ export class OpalBot {
    * EXPERIMENTAL: Run the configuration Web server.
    */
   runWeb(port: number, rsrcdir='web') {
-    let r = new route.Route('GET', '/settings/:token', (req, res, params) => {
-      let token = params['token'];
-      res.statusCode = 200;
-      res.setHeader('Content-Type', 'text/html');
-      fs.createReadStream(path.join(rsrcdir, 'settings.html')).pipe(res);
-    });
-    let server = http.createServer(route.dispatch([r]));
+    let routes = [
+      new route.Route('GET', '/settings/:token', async (req, res, params) => {
+        webutil.sendfile(res, path.join(rsrcdir, 'settings.html'));
+      }),
+
+      new route.Route('POST', '/settings/:token', async (req, res, params) => {
+        let token = params['token'];
+        let data = await webutil.formdata(req);
+        console.log(data);
+      }),
+    ];
+    let server = http.createServer(route.dispatch(routes));
     server.listen(port, () => {
       console.log(`web interface running at http://localhost:${port}`);
     });
