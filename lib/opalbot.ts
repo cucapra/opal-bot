@@ -183,6 +183,8 @@ export class OpalBot {
         'appleid': resp['appleid'],
         'password': resp['password'],
       };
+      this.users.update(user);
+      this.db.saveDatabase();
       return "icloud";
     }
   }
