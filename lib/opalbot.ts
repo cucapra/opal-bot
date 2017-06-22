@@ -16,7 +16,7 @@ import * as path from 'path';
 
 import fetch from 'node-fetch';
 
-import { findURL, gitSummary } from './util';
+import { findURL, gitSummary, IVars, randomString } from './util';
 
 /**
  * Our data model for keeping track of users' data.
@@ -34,6 +34,12 @@ export class OpalBot {
    * User settings, stored in the database.
    */
   public users: LokiCollection<User>;
+
+  /**
+   * Web sessions. Maps opaque URL tokens to callbacks that continue the
+   * conversation.
+   */
+  public webSessions = new IVars<route.Params>();
 
   constructor(
     public wit: Wit,
@@ -96,8 +102,14 @@ export class OpalBot {
 
       new route.Route('POST', '/settings/:token', async (req, res, params) => {
         let token = params['token'];
-        let data = await webutil.formdata(req);
-        console.log(data);
+        if (this.webSessions.has(token)) {
+          let data = await webutil.formdata(req);
+          this.webSessions.put(token, data);
+          res.end('got it; thanks!');
+        } else {
+          res.statusCode = 404;
+          res.end('invalid token');
+        }
       }),
     ];
     let server = http.createServer(route.dispatch(routes));
@@ -132,30 +144,13 @@ export class OpalBot {
   }
 
   /**
-   * Interact with the user to get their calendar URL. If the user doesn't
-   * have a URL yet, or if `force` is specified, ask them for one.
+   * Interact with the user to get their settings.
    */
-  async getCalendarURL(conv: Conversation,
-                       force = false): Promise<string | null> {
-    // Do we already have a calendar URL for this user?
-    let user = this.getUser(conv);
-    if (!force && user.calendar_url) {
-      return user.calendar_url;
-    }
-
-    // Query the user.
-    conv.send("please paste your calendar URL");
-    let url = findURL(await conv.recv());
-    if (url) {
-      console.log(`setting calendar URL to ${url}`);
-      user.calendar_url = url;
-      this.users.update(user);
-      this.db.saveDatabase();
-      return url;
-    } else {
-      conv.send("hmm... that doesn't look like a URL");
-      return null;
-    }
+  async gatherSettings(conv: Conversation) {
+    let token = randomString();
+    conv.send(`please fill out the form at ${token}`);
+    let config = await this.webSessions.get(token);
+    console.log(config);
   }
 
   /**
@@ -198,10 +193,7 @@ export class OpalBot {
    * Conversation where the user wants to set up their calendar settings.
    */
   async handle_setup_calendar(conv: Conversation) {
-    let url = await this.getCalendarURL(conv, true);
-    if (url) {
-      conv.send("ok, we're all set!");
-    }
+    await this.gatherSettings(conv);
   }
 
   /**

@@ -3,6 +3,7 @@
  */
 import * as child_process from 'child_process';
 const urlRegex: RegExp = require('url-regex')();
+import * as crypto from 'crypto';
 
 /**
  * Get the current git revision string for a repository.
@@ -35,5 +36,58 @@ export function findURL(s: string): string | null {
     return url;
   } else {
     return null;
+  }
+}
+
+/**
+ * Generate a random, URL-safe slug.
+ */
+export function randomString() {
+  // I'd use base64 here if there were an option for a URL-safe version (or
+  // even base32).
+  return crypto.randomBytes(8).toString('hex').slice(0, 10);
+}
+
+/**
+ * A simple multiplexed I-structure indexed by string.
+ */
+export class IVars<T> {
+  callbacks = new Map<string, (p: T) => void>();
+
+  /**
+   * Send a value to someone waiting to `get` it.
+   *
+   * There's a small twist on ordinary IVars: you must `get` before `put`ing.
+   * It is an error to `put` before someone has called `get`. We can fix this
+   * later with a second buffer.
+   */
+  put(key: string, p: T) {
+    let cbk = this.callbacks.get(key);
+    if (cbk) {
+      cbk(p);
+    } else {
+      throw "IVar not present";
+    }
+  }
+
+  /**
+   * Check whether an IVar has anyone waiting for it.
+   */
+  has(key: string) {
+    return this.callbacks.has(key);
+  }
+
+  /**
+   * Get a value from someone who calls `put`.
+   *
+   * It is an error to `get` multiple times on the same key.
+   */
+  get(key: string): Promise<T> {
+    if (this.callbacks.has(key)) {
+      throw "IVar already waiting";
+    }
+    return new Promise((resolve, reject) => {
+      this.callbacks.set(key, resolve);
+    });
   }
 }
