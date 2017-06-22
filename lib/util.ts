@@ -64,6 +64,7 @@ export class IVars<T> {
   put(key: string, p: T) {
     let cbk = this.callbacks.get(key);
     if (cbk) {
+      this.callbacks.delete(key);
       cbk(p);
     } else {
       throw "IVar not present";
