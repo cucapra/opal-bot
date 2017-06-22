@@ -50,14 +50,12 @@ export class Route {
   public match(req: http.IncomingMessage): Params | null {
     if (req.method && req.method.toUpperCase() == this.method && req.url) {
       const match = this.regex.exec(req.url);
-      console.log(match);
       if (match) {
         // Pack regex capture groups into a key/value mapping.
         let params: Params = {};
         this.paramNames.forEach((name, i) => {
           params[name] = match[i + 1];
         });
-        console.log(params);
         return params;
       }
     }

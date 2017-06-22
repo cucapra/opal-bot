@@ -11,6 +11,8 @@ import { Wit } from 'node-wit';
 import * as wit from './wit';
 import * as route from './route';
 import * as http from 'http';
+import * as fs from 'fs';
+import * as path from 'path';
 
 import fetch from 'node-fetch';
 
@@ -86,9 +88,12 @@ export class OpalBot {
   /**
    * EXPERIMENTAL: Run the configuration Web server.
    */
-  runWeb(port: number) {
-    let r = new route.Route('GET', '/foo/:bar', (req, res, params) => {
-      res.end(`hi, ${params['bar']}`);
+  runWeb(port: number, rsrcdir='web') {
+    let r = new route.Route('GET', '/settings/:token', (req, res, params) => {
+      let token = params['token'];
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/html');
+      fs.createReadStream(path.join(rsrcdir, 'settings.html')).pipe(res);
     });
     let server = http.createServer(route.dispatch([r]));
     server.listen(port, () => {
