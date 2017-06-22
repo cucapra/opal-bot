@@ -13,10 +13,9 @@ import * as route from './route';
 import * as http from 'http';
 import * as webutil from './webutil';
 import * as path from 'path';
-
 import fetch from 'node-fetch';
-
 import { findURL, gitSummary, IVars, randomString } from './util';
+import { Calendar } from '../multical/caldav';
 
 /**
  * Our data model for keeping track of users' data.
@@ -170,25 +169,33 @@ export class OpalBot {
     return await this.webSessions.get(token);
   }
 
-  async getSettings(conv: Conversation, force=false) {
+  /**
+   * Get the user's configured Calendar. If `force` is enabled or the calendar
+   * hasn't been set up, interact with the user to set it up first.
+   */
+  async getCalendar(conv: Conversation, force=false): Promise<Calendar | null> {
     let user = this.getUser(conv);
     if (!force) {
       if (user.caldav) {
-        return "caldav";
+        return new Calendar(user.caldav.url, user.caldav.username,
+          user.caldav.password);
       }
     }
 
     let resp = await this.gatherSettings(conv);
     if (resp['service'] === 'caldav') {
-      user.caldav = {
-        'url': resp['url'],
-        'username': resp['username'],
-        'password': resp['password'],
-      };
+      let url = resp['url'];
+      let username = resp['username'];
+      let password = resp['password'];
+
+      user.caldav = { url, username, password };
       this.users.update(user);
       this.db.saveDatabase();
-      return "caldav";
+
+      return new Calendar(url, username, password);
     }
+
+    return null;
   }
 
   /**
@@ -217,9 +224,9 @@ export class OpalBot {
    */
   async handle_show_calendar(conv: Conversation) {
     conv.send("let's get your calendar!");
-    let settings = await this.getSettings(conv);
-    if (settings) {
-      conv.send(settings);
+    let calendar = await this.getCalendar(conv);
+    if (calendar) {
+      conv.send(calendar.url);
     }
   }
 
@@ -235,7 +242,7 @@ export class OpalBot {
    * Conversation where the user wants to set up their calendar settings.
    */
   async handle_setup_calendar(conv: Conversation) {
-    await this.getSettings(conv, true);
+    await this.getCalendar(conv, true);
     conv.send("ok, all set!");
   }
 

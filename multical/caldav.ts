@@ -81,7 +81,7 @@ function rangeQuery(start: moment.Moment, end: moment.Moment) {
 /**
  * A client for a specific CalDAV calendar.
  */
-class Calendar {
+export class Calendar {
   constructor(
     public url: string,
     public username: string,
