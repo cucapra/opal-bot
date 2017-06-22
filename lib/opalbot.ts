@@ -58,17 +58,46 @@ export class OpalBot {
   public webSessions = new IVars<route.Params>();
 
   /**
-   * The configuration server URL (if it's running).
+   * The web server URL (if it's running).
    */
   public webURL: string | null = null;
+
+  /**
+   * Routes for the web server.
+   */
+  public webRoutes: route.Route[] = [];
 
   constructor(
     public wit: Wit,
     public db: Loki,
+    public webdir = 'web',
   ) {
     // Get or create a database collection for users.
     this.users = (db.getCollection("users") ||
       db.addCollection("users")) as LokiCollection<User>;
+
+    // Set up configuration web interface.
+    this.webRoutes.push(new route.Route('/settings/:token', async (req, res, params) => {
+      // Make sure we have a valid token.
+      let token = params['token'];
+      if (!this.webSessions.has(token)) {
+        res.statusCode = 404;
+        res.end('invalid token');
+        return;
+      }
+
+      if (req.method === 'GET') {
+        // Send the form.
+        webutil.sendfile(res, path.join(webdir, 'settings.html'));
+      } else if (req.method === 'POST') {
+        // Retrieve the settings.
+        let data = await webutil.formdata(req);
+        this.webSessions.put(token, data);
+        res.end('got it; thanks!');
+      } else {
+        route.notFound(req, res);
+      }
+    }));
   }
 
   /**
@@ -101,48 +130,24 @@ export class OpalBot {
   }
 
   /**
-   * Run a server to interact with Facebook Messenger.
+   * Add a server component to interact with Facebook Messenger. You still
+   * need to call `runWeb` to actually run the server.
    */
-  runFacebook(token: string, verify: string, port: number) {
+  addFacebook(token: string, verify: string) {
     let fb = new FacebookBot(token, verify);
     this.register(fb);
-
-    // Start an HTTP server with this handler.
-    let server = http.createServer(fb.handler());
-    server.listen(port);
+    this.webRoutes.push(new route.Route('/fb', fb.handler()));
   }
 
   /**
-   * EXPERIMENTAL: Run the configuration Web server.
+   * Run Web server.
    */
-  runWeb(port: number, rsrcdir='web'): Promise<void> {
-    let r = new route.Route('/settings/:token', async (req, res, params) => {
-      // Make sure we have a valid token.
-      let token = params['token'];
-      if (!this.webSessions.has(token)) {
-        res.statusCode = 404;
-        res.end('invalid token');
-        return;
-      }
-
-      if (req.method === 'GET') {
-        // Send the form.
-        webutil.sendfile(res, path.join(rsrcdir, 'settings.html'));
-      } else if (req.method === 'POST') {
-        // Retrieve the settings.
-        let data = await webutil.formdata(req);
-        this.webSessions.put(token, data);
-        res.end('got it; thanks!');
-      } else {
-        route.notFound(req, res);
-      }
-    });
-    let server = http.createServer(route.dispatch([r]));
-
+  runWeb(port: number): Promise<void> {
+    let server = http.createServer(route.dispatch(this.webRoutes));
     return new Promise<void>((resolve, reject) => {
       server.listen(port, () => {
         this.webURL = `http://localhost:${port}`;
-        console.log(`web interface running at ${this.webURL}`);
+        console.log(`web server running at ${this.webURL}`);
         resolve();
       });
     });

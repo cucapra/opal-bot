@@ -9,7 +9,7 @@ export type Handler = (req: http.IncomingMessage,
 export type Params = { [key: string]: string };
 export type RouteHandler = (req: http.IncomingMessage,
   res: http.ServerResponse,
-  params: Params) => Promise<void>;
+  params: Params) => Promise<void> | void;
 
 // https://developer.mozilla.org/en/docs/Web/JavaScript/Guide/Regular_Expressions
 function escapeRegExp(s: string) {

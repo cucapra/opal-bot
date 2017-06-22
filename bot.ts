@@ -38,9 +38,6 @@ async function main() {
     alias: { 'term': ['t'], 'fb': ['f'], 'slack': ['s'] },
   });
 
-  // Start the configuration server.
-  await bot.runWeb(1234);
-
   // Slack.
   if (opts['slack']) {
     let slack_token = process.env['SLACK_BOT_TOKEN'];
@@ -58,9 +55,12 @@ async function main() {
     if (!fb_page_token || !fb_verify_token) {
       console.error("missing FB_PAGE_TOKEN or FB_VERIFY_TOKEN");
     } else {
-      bot.runFacebook(fb_page_token, fb_verify_token, 5000);
+      bot.addFacebook(fb_page_token, fb_verify_token);
     }
   }
+
+  // Start the web server.
+  await bot.runWeb(5000);
 
   // Terminal.
   if (opts['term']) {
