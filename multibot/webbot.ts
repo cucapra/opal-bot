@@ -16,13 +16,20 @@ export class WebBot {
       new libweb.Route('/chat.js', (req, res) => {
         libweb.sendfile(res, 'web/chat.js');
       }),
-      new libweb.Route('/chat/events', (req, res) => {
-        let sse = new SSE();
-        sse.pipe(res);
-        sse.event('test', 'hello');
-        setTimeout(() => {
-          sse.event('test', 'foo');
-        }, 1000);
+      new libweb.Route('/chat/messages', async (req, res) => {
+        if (req.method === 'GET') {
+          // Stream messages!
+          let sse = new SSE();
+          sse.pipe(res);
+          sse.event('message', 'hello');
+          setTimeout(() => {
+            sse.event('message', 'foo');
+          }, 1000);
+        } else if (req.method === 'POST') {
+          // Received a new message.
+          let msg = await libweb.body(req);
+          console.log(msg);
+        }
       }),
     ];
   }
