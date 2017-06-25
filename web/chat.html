@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chat</title>
+</head>
+<body>
+
+<script>
+let eventSource = new EventSource("/chat/events");
+eventSource.addEventListener('test', (e) => {
+    console.log(e);
+    let par = document.createElement("p");
+    par.innerHTML = e.data;
+    document.querySelector('body').appendChild(par);
+});
+</script>
+</body>
+</html>
