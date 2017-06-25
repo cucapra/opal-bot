@@ -13,6 +13,9 @@ export class WebBot {
       new libweb.Route('/chat', (req, res) => {
         libweb.sendfile(res, 'web/chat.html');
       }),
+      new libweb.Route('/chat.js', (req, res) => {
+        libweb.sendfile(res, 'web/chat.js');
+      }),
       new libweb.Route('/chat/events', (req, res) => {
         let sse = new SSE();
         sse.pipe(res);
