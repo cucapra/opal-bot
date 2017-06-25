@@ -9,8 +9,7 @@ import { TerminalBot } from '../multibot/termbot';
 import { FacebookBot } from '../multibot/fbbot';
 import { Wit } from 'node-wit';
 import * as wit from './wit';
-import * as route from '../libweb/route';
-import * as webutil from '../libweb/webutil';
+import * as libweb from '../libweb';
 import * as http from 'http';
 import * as path from 'path';
 import fetch from 'node-fetch';
@@ -55,7 +54,7 @@ export class OpalBot {
    * Web sessions. Maps opaque URL tokens to callbacks that continue the
    * conversation.
    */
-  public webSessions = new IVars<route.Params>();
+  public webSessions = new IVars<libweb.Params>();
 
   /**
    * The web server URL (if it's running).
@@ -65,7 +64,7 @@ export class OpalBot {
   /**
    * Routes for the web server.
    */
-  public webRoutes: route.Route[] = [];
+  public webRoutes: libweb.Route[] = [];
 
   constructor(
     public wit: Wit,
@@ -77,7 +76,7 @@ export class OpalBot {
       db.addCollection("users")) as LokiCollection<User>;
 
     // Set up configuration web interface.
-    this.webRoutes.push(new route.Route('/settings/:token', async (req, res, params) => {
+    this.webRoutes.push(new libweb.Route('/settings/:token', async (req, res, params) => {
       // Make sure we have a valid token.
       let token = params['token'];
       if (!this.webSessions.has(token)) {
@@ -88,14 +87,14 @@ export class OpalBot {
 
       if (req.method === 'GET') {
         // Send the form.
-        webutil.sendfile(res, path.join(webdir, 'settings.html'));
+        libweb.sendfile(res, path.join(webdir, 'settings.html'));
       } else if (req.method === 'POST') {
         // Retrieve the settings.
-        let data = await webutil.formdata(req);
+        let data = await libweb.formdata(req);
         this.webSessions.put(token, data);
         res.end('got it; thanks!');
       } else {
-        route.notFound(req, res);
+        libweb.notFound(req, res);
       }
     }));
   }
@@ -136,14 +135,14 @@ export class OpalBot {
   addFacebook(token: string, verify: string) {
     let fb = new FacebookBot(token, verify);
     this.register(fb);
-    this.webRoutes.push(new route.Route('/fb', fb.handler()));
+    this.webRoutes.push(new libweb.Route('/fb', fb.handler()));
   }
 
   /**
    * Run Web server.
    */
   runWeb(port: number): Promise<void> {
-    let server = http.createServer(route.dispatch(this.webRoutes));
+    let server = http.createServer(libweb.dispatch(this.webRoutes));
     return new Promise<void>((resolve, reject) => {
       server.listen(port, () => {
         this.webURL = `http://localhost:${port}`;
