@@ -34,8 +34,8 @@ async function main() {
 
   // Parse the command-line options.
   let opts = minimist(process.argv.slice(2), {
-    boolean: [ 'term', 'fb', 'slack' ],
-    alias: { 'term': ['t'], 'fb': ['f'], 'slack': ['s'] },
+    boolean: [ 'term', 'fb', 'slack', 'web' ],
+    alias: { 'term': ['t'], 'fb': ['f'], 'slack': ['s'], 'web': ['w'] },
   });
 
   // Slack.
@@ -57,6 +57,11 @@ async function main() {
     } else {
       bot.addFacebook(fb_page_token, fb_verify_token);
     }
+  }
+
+  // Web interface.
+  if (opts['web']) {
+    bot.addWeb();
   }
 
   // Start the web server.

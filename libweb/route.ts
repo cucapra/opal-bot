@@ -19,15 +19,12 @@ function escapeRegExp(s: string) {
 
 export class Route {
   public regex: RegExp;
-  public pattern: string;
   public paramNames: string[];
 
   constructor(
     pattern: string,
     public handler: RouteHandler,
   ) {
-    this.pattern = pattern.toUpperCase();
-
     // Find patterns like :pat in the pattern. Replace them with regex
     // capture groups.
     this.paramNames = [];

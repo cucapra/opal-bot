@@ -7,6 +7,7 @@ import { Bot, Conversation } from '../multibot';
 import { SlackBot } from '../multibot/slackbot';
 import { TerminalBot } from '../multibot/termbot';
 import { FacebookBot } from '../multibot/fbbot';
+import { WebBot } from "../multibot/webbot";
 import { Wit } from 'node-wit';
 import * as wit from './wit';
 import * as libweb from '../libweb';
@@ -136,6 +137,16 @@ export class OpalBot {
     let fb = new FacebookBot(token, verify);
     this.register(fb);
     this.webRoutes.push(new libweb.Route('/fb', fb.handler()));
+  }
+
+  /**
+   * Add server component for directly interacting with the bot through
+   * a Web interface.
+   */
+  addWeb() {
+    let web = new WebBot();
+    this.register(web);
+    this.webRoutes.push(...web.routes());
   }
 
   /**

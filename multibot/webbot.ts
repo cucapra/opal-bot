@@ -24,14 +24,20 @@ class Conversation implements basebot.Conversation {
     return await this.webbot.spool.wait(null);
   }
 
-  namespace = "terminal";
+  namespace = "web";
 }
 
+/**
+ * A bot interface that communicates through a Web interface.
+ */
 export class WebBot implements basebot.Bot {
   public spool = new basebot.Spool<null, string>();
   public onconverse: basebot.ConversationHandler | null = null;
   public sse: any;
 
+  /**
+   * The server routes for interacting with the bot.
+   */
   routes() {
     return [
       // Front-end resources.
@@ -51,6 +57,7 @@ export class WebBot implements basebot.Bot {
           this.sse.pipe(res);
         } else if (req.method === 'POST') {
           // Received a new message.
+          // TODO All web users are considered the same for now.
           let text = await libweb.body(req);
           this.spool.fire(
             this, null, text, text,
@@ -69,12 +76,3 @@ export class WebBot implements basebot.Bot {
     }
   }
 }
-
-// Smoke test.
-let bot = new WebBot();
-bot.onconverse = async (text, conv) => {
-  console.log(text);
-  conv.send("ack! " + text);
-};
-let server = http.createServer(libweb.dispatch(bot.routes()));
-server.listen(4005);
