@@ -7,7 +7,10 @@ build:
 run:
 	node build/bot.js
 
-.PHONY: deploy
+.PHONY: deploy update
 deploy:
-	ssh waffle 'cd waffle; docker-compose exec -T opal ./update.sh; \
+	ssh waffle 'cd waffle; docker-compose exec -T opal make update; \
 		docker-compose restart opal'
+update:
+	git pull
+	make
