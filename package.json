@@ -30,6 +30,7 @@
     "bot": "build/bot.js"
   },
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "build-web": "tsc -p web"
   }
 }

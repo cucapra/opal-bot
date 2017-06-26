@@ -2,6 +2,7 @@
 build:
 	yarn
 	yarn run build
+	yarn run build-web
 
 .PHONY: run
 run:
