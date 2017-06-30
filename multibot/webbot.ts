@@ -29,12 +29,53 @@ class Conversation implements basebot.Conversation {
 }
 
 /**
+ * Buffers and replays SSE events.
+ */
+class SSEBuffer {
+  /**
+   * The buffered events.
+   */
+  events: { id: number, name: string, data: string }[] = [];
+
+  /**
+   * The SSE formatter stream for all connected clients.
+   */
+  sse = new SSE();
+
+  /**
+   * The highest id we've used so far. (We use sequential integers.)
+   */
+  nextId = 0;
+
+  /**
+   * Create a buffer that holds a history of a given maximum size.
+   */
+  constructor(public size = 32) {};
+
+  /**
+   * Stream to a newly connected client.
+   */
+  connect(req: http.IncomingMessage, res: http.ServerResponse) {
+    // Pipe our main writer stream to this client.
+    this.sse.pipe(res);
+  }
+
+  /**
+   * Send an event.
+   */
+  send(name: string, data: string) {
+    this.sse.event(this.nextId, name, data);
+    this.nextId++;
+  }
+}
+
+/**
  * A bot interface that communicates through a Web interface.
  */
 export class WebBot implements basebot.Bot {
   public spool = new basebot.Spool<null, string>();
   public onconverse: basebot.ConversationHandler | null = null;
-  public sse = new SSE();
+  public ssebuf = new SSEBuffer();
 
   /**
    * The server routes for interacting with the bot.
@@ -50,8 +91,8 @@ export class WebBot implements basebot.Bot {
       // Send and receive messages.
       new libweb.Route('/chat/messages', async (req, res) => {
         if (req.method === 'GET') {
-          // Pipe our SSE writer to this stream.
-          this.sse.pipe(res);
+          // Start sending messages to this client.
+          this.ssebuf.connect(req, res);
         } else if (req.method === 'POST') {
           // Received a new message.
           // TODO All web users are considered the same for now.
@@ -71,6 +112,6 @@ export class WebBot implements basebot.Bot {
   send(text: string) {
     // TODO Add the message to a log so we can send it out even if no one
     // is connected.
-    this.sse.event('message', text);
+    this.ssebuf.send('message', text);
   }
 }
