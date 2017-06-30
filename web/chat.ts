@@ -26,6 +26,9 @@ document.addEventListener("DOMContentLoaded", () => {
     li.appendChild(msgText);
 
     incomingList.appendChild(li);
+
+    // To show the message.
+    incomingList.scrollTop = incomingList.scrollHeight;
   }
 
   // Wait for incoming messages.
