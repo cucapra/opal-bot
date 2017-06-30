@@ -61,6 +61,10 @@ class SSEBuffer {
    * Stream to a newly connected client.
    */
   connect(req: http.IncomingMessage, res: http.ServerResponse) {
+    // Request that any proxies treat this as a stream.
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('X-Accel-Buffering', 'no');
+
     // Replay any events this client hasn't seen yet. First, the request
     // *might* contain a last-seen ID.
     let leid = 0;  // Before all "real" IDs.
