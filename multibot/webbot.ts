@@ -61,6 +61,9 @@ export class WebBot implements basebot.Bot {
             this, null, text, text,
             () => new Conversation(this, "user"),
           );
+
+          // Acknowledge the message.
+          res.end('ok');
         }
       }),
     ];
