@@ -12,23 +12,33 @@ document.addEventListener("DOMContentLoaded", () => {
     let outgoingBox = document.querySelector("#outgoing") as HTMLInputElement;
 
     // Add a message to our chat log.
-    function addMessage(s: string) {
+    function addMessage(who: string, msg: string) {
         let li = document.createElement("li");
-        li.innerText = s;
+
+        // Author.
+        let whoSpan = document.createElement("span");
+        whoSpan.classList.add('who');
+        whoSpan.innerText = who;
+        li.appendChild(whoSpan);
+
+        // Message text.
+        let msgText = document.createTextNode(msg);
+        li.appendChild(msgText);
+
         incomingList.appendChild(li);
     }
 
     // Wait for incoming messages.
     let eventSource = new EventSource("/chat/messages");
     eventSource.addEventListener('message', (e) => {
-        addMessage('bot: ' + e.data);
+        addMessage('bot', e.data);
     });
 
     // Send outgoing messages.
     outgoingForm.addEventListener("submit", (e) => {
         // Get the message from the text box and add to log.
         let message = outgoingBox.value;
-        addMessage('you: ' + message);
+        addMessage('you', message);
 
         // Send the message to the server.
         fetch(outgoingForm.target, {

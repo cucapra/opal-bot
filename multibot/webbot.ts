@@ -44,6 +44,7 @@ export class WebBot implements basebot.Bot {
       new libweb.Route('/chat', libweb.file('web/chat.html')),
       new libweb.Route('/chat.js',
         libweb.file('web/chat.js', 'application/javascript')),
+      new libweb.Route('/chat.css', libweb.file('web/chat.css', 'text/css')),
 
       // Send and receive messages.
       new libweb.Route('/chat/messages', async (req, res) => {
