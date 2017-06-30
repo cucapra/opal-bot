@@ -50,4 +50,13 @@ document.addEventListener("DOMContentLoaded", () => {
         outgoingBox.value = '';
         e.preventDefault();
     });
+
+    // Start with focus on input box.
+    outgoingBox.focus();
+
+    // Characters typed when not focused bring the focus back.
+    let body = document.querySelector('body')!;
+    body.addEventListener("keypress", (e) => {
+        outgoingBox.focus();
+    });
 });
