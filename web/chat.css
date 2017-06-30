@@ -20,6 +20,9 @@ input {
 
 ul {
     list-style: none;
+
+    /* Don't hide the bottom under the text box. */
+    margin-bottom: 4rem;
 }
 
 .who {
