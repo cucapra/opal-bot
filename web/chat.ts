@@ -31,14 +31,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // Wait for incoming messages.
     let eventSource = new EventSource("/chat/messages");
     eventSource.addEventListener('message', (e) => {
-        addMessage('bot', e.data);
+        let msg = JSON.parse(e.data);
+        if (msg) {
+            addMessage(msg['who'], msg['text']);
+        }
     });
 
     // Send outgoing messages.
     outgoingForm.addEventListener("submit", (e) => {
-        // Get the message from the text box and add to log.
+        // Get the message from the text box.
         let message = outgoingBox.value;
-        addMessage('you', message);
 
         // Send the message to the server.
         fetch(outgoingForm.target, {

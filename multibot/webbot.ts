@@ -18,7 +18,7 @@ class Conversation implements basebot.Conversation {
   ) {}
 
   send(text: string) {
-    this.webbot.send(text);
+    this.webbot.send('bot', text);
   }
 
   async recv() {
@@ -73,6 +73,7 @@ class SSEBuffer {
     }
 
     // Inefficiently replay all events above this ID.
+    console.log(`replaying messages after ${leid}`);
     let replaySse = new SSE();
     replaySse.pipe(res);
     for (let event of this.events) {
@@ -136,6 +137,9 @@ export class WebBot implements basebot.Bot {
             () => new Conversation(this, "user"),
           );
 
+          // Echo the message to clients.
+          this.send('you', text);
+
           // Acknowledge the message.
           res.end('ok');
         }
@@ -143,9 +147,10 @@ export class WebBot implements basebot.Bot {
     ];
   }
 
-  send(text: string) {
-    // TODO Add the message to a log so we can send it out even if no one
-    // is connected.
-    this.ssebuf.send('message', text);
+  /**
+   * Send a message to clients.
+   */
+  send(who: string, text: string) {
+    this.ssebuf.send('message', JSON.stringify({ who, text }));
   }
 }
