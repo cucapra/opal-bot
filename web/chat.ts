@@ -7,58 +7,58 @@ declare class EventSource {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-    let incomingList = document.querySelector("#incoming") as HTMLElement;
-    let outgoingForm = document.querySelector("form")!;
-    let outgoingBox = document.querySelector("#outgoing") as HTMLInputElement;
+  let incomingList = document.querySelector("#incoming") as HTMLElement;
+  let outgoingForm = document.querySelector("form")!;
+  let outgoingBox = document.querySelector("#outgoing") as HTMLInputElement;
 
-    // Add a message to our chat log.
-    function addMessage(who: string, msg: string) {
-        let li = document.createElement("li");
+  // Add a message to our chat log.
+  function addMessage(who: string, msg: string) {
+    let li = document.createElement("li");
 
-        // Author.
-        let whoSpan = document.createElement("span");
-        whoSpan.classList.add('who');
-        whoSpan.innerText = who;
-        li.appendChild(whoSpan);
+    // Author.
+    let whoSpan = document.createElement("span");
+    whoSpan.classList.add('who');
+    whoSpan.innerText = who;
+    li.appendChild(whoSpan);
 
-        // Message text.
-        let msgText = document.createTextNode(msg);
-        li.appendChild(msgText);
+    // Message text.
+    let msgText = document.createTextNode(msg);
+    li.appendChild(msgText);
 
-        incomingList.appendChild(li);
+    incomingList.appendChild(li);
+  }
+
+  // Wait for incoming messages.
+  let eventSource = new EventSource("/chat/messages");
+  eventSource.addEventListener('message', (e) => {
+    let msg = JSON.parse(e.data);
+    if (msg) {
+      addMessage(msg['who'], msg['text']);
     }
+  });
 
-    // Wait for incoming messages.
-    let eventSource = new EventSource("/chat/messages");
-    eventSource.addEventListener('message', (e) => {
-        let msg = JSON.parse(e.data);
-        if (msg) {
-            addMessage(msg['who'], msg['text']);
-        }
+  // Send outgoing messages.
+  outgoingForm.addEventListener("submit", (e) => {
+    // Get the message from the text box.
+    let message = outgoingBox.value;
+
+    // Send the message to the server.
+    fetch(outgoingForm.target, {
+      method: 'POST',
+      body: message,
     });
 
-    // Send outgoing messages.
-    outgoingForm.addEventListener("submit", (e) => {
-        // Get the message from the text box.
-        let message = outgoingBox.value;
+    // Clear input. No normal form submission.
+    outgoingBox.value = '';
+    e.preventDefault();
+  });
 
-        // Send the message to the server.
-        fetch(outgoingForm.target, {
-            method: 'POST',
-            body: message,
-        });
+  // Start with focus on input box.
+  outgoingBox.focus();
 
-        // Clear input. No normal form submission.
-        outgoingBox.value = '';
-        e.preventDefault();
-    });
-
-    // Start with focus on input box.
+  // Characters typed when not focused bring the focus back.
+  let body = document.querySelector('body')!;
+  body.addEventListener("keypress", (e) => {
     outgoingBox.focus();
-
-    // Characters typed when not focused bring the focus back.
-    let body = document.querySelector('body')!;
-    body.addEventListener("keypress", (e) => {
-        outgoingBox.focus();
-    });
+  });
 });
