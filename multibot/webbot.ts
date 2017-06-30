@@ -50,7 +50,12 @@ class SSEBuffer {
   /**
    * Create a buffer that holds a history of a given maximum size.
    */
-  constructor(public size = 32) {};
+  constructor(public size = 32) {
+    // When no one is connected, we want calls to `sse.event` to just
+    // be discarded. By default, the Node Readable setup will use its
+    // own buffering. We stick to our own buffering.
+    this.sse.resume();
+  };
 
   /**
    * Stream to a newly connected client.
