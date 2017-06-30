@@ -69,6 +69,7 @@ export class WebBot implements basebot.Bot {
   send(text: string) {
     // TODO Add the message to a log so we can send it out even if no one
     // is connected.
+    console.log(`sending to ${this.sse}: ${text}`);
     if (this.sse) {
       this.sse.event('message', text);
     }
