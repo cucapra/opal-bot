@@ -56,6 +56,26 @@ class SSEBuffer {
    * Stream to a newly connected client.
    */
   connect(req: http.IncomingMessage, res: http.ServerResponse) {
+    // Replay any events this client hasn't seen yet. First, the request
+    // *might* contain a last-seen ID.
+    let leid = -1;  // Before all "real" IDs.
+    let leid_s = req.headers['Last-Event-Id'];
+    if (leid_s) {
+      let leid = parseInt(leid_s);
+      if (isNaN(leid)) {
+        leid = -1;
+      }
+    }
+
+    // Inefficiently replay all events above this ID.
+    let replaySse = new SSE();
+    replaySse.pipe(res);
+    for (let event of this.events) {
+      if (event.id > leid) {
+        replaySse.event(event);
+      }
+    }
+
     // Pipe our main writer stream to this client.
     this.sse.pipe(res);
   }
@@ -64,6 +84,13 @@ class SSEBuffer {
    * Send an event.
    */
   send(name: string, data: string) {
+    // Push the event to our buffer, rotating off an old event if necessary.
+    this.events.push({ id: this.nextId, name, data });
+    if (this.events.length > this.size) {
+      this.events.splice(0, this.events.length - this.size);
+    }
+
+    // Send the new event to currently-connected clients.
     this.sse.event(this.nextId, name, data);
     this.nextId++;
   }
