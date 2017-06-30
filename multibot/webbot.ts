@@ -45,7 +45,7 @@ class SSEBuffer {
   /**
    * The highest id we've used so far. (We use sequential integers.)
    */
-  nextId = 0;
+  lastId = 0;
 
   /**
    * Create a buffer that holds a history of a given maximum size.
@@ -58,7 +58,7 @@ class SSEBuffer {
   connect(req: http.IncomingMessage, res: http.ServerResponse) {
     // Replay any events this client hasn't seen yet. First, the request
     // *might* contain a last-seen ID.
-    let leid = -1;  // Before all "real" IDs.
+    let leid = 0;  // Before all "real" IDs.
     let leid_s = req.headers['Last-Event-Id'];
     if (leid_s) {
       let leid = parseInt(leid_s);
@@ -84,15 +84,17 @@ class SSEBuffer {
    * Send an event.
    */
   send(name: string, data: string) {
+    let id = this.lastId + 1;
+    this.lastId = id;
+
     // Push the event to our buffer, rotating off an old event if necessary.
-    this.events.push({ id: this.nextId, name, data });
+    this.events.push({ id, name, data });
     if (this.events.length > this.size) {
       this.events.splice(0, this.events.length - this.size);
     }
 
     // Send the new event to currently-connected clients.
-    this.sse.event(this.nextId, name, data);
-    this.nextId++;
+    this.sse.event(id, name, data);
   }
 }
 
