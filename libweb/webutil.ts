@@ -33,3 +33,12 @@ export function sendfile(res: http.ServerResponse, path: string, mime='text/html
   res.setHeader('Content-Type', mime);
   fs.createReadStream(path).pipe(res);
 }
+
+/**
+ * A handler that sends a static file.
+ */
+export function file(path: string, mime='text/html') {
+  return (req: http.IncomingMessage, res: http.ServerResponse) => {
+    sendfile(res, path, mime);
+  };
+}
