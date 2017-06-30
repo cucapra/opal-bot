@@ -3,9 +3,10 @@
  */
 
 import * as basebot from './basebot';
-import * as http from 'http';
 import * as libweb from '../libweb';
-const SSE = require('sse-writer');
+import * as http from 'http';
+import * as util from 'util';
+import SSE = require('sse-writer');
 
 /**
  * A conversation that interacts with the user in the terminal.
@@ -33,7 +34,7 @@ class Conversation implements basebot.Conversation {
 export class WebBot implements basebot.Bot {
   public spool = new basebot.Spool<null, string>();
   public onconverse: basebot.ConversationHandler | null = null;
-  public sse: any;
+  public sse: SSE;
 
   /**
    * The server routes for interacting with the bot.
@@ -72,7 +73,7 @@ export class WebBot implements basebot.Bot {
   send(text: string) {
     // TODO Add the message to a log so we can send it out even if no one
     // is connected.
-    console.log(`sending to ${this.sse}: ${text}`);
+    console.log(`sending to ${util.inspect(this.sse)}: ${text}`);
     if (this.sse) {
       this.sse.event('message', text);
     }
