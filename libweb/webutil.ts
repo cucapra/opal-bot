@@ -31,7 +31,20 @@ export async function formdata(req: http.IncomingMessage) {
 export function sendfile(res: http.ServerResponse, path: string, mime='text/html') {
   res.statusCode = 200;
   res.setHeader('Content-Type', mime);
-  fs.createReadStream(path).pipe(res);
+
+  let stream = fs.createReadStream(path);
+  stream.on('error', (e: any) => {
+    if (e.code === 'ENOENT') {
+      console.error(`static path ${path} not found`);
+      res.statusCode = 404;
+      res.end('not found');
+    } else {
+      console.error(`filesystem error: ${e}`);
+      res.statusCode = 500;
+      res.end('internal server error');
+    }
+  });
+  stream.pipe(res);
 }
 
 /**
