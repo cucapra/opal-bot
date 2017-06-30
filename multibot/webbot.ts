@@ -68,9 +68,9 @@ class SSEBuffer {
     // Replay any events this client hasn't seen yet. First, the request
     // *might* contain a last-seen ID.
     let leid = 0;  // Before all "real" IDs.
-    let leid_s = req.headers['Last-Event-Id'];
+    let leid_s = req.headers['last-event-id'];
     if (leid_s) {
-      let leid = parseInt(leid_s);
+      leid = parseInt(leid_s);
       if (isNaN(leid)) {
         leid = -1;
       }
