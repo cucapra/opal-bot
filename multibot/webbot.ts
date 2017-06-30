@@ -34,7 +34,7 @@ class Conversation implements basebot.Conversation {
 export class WebBot implements basebot.Bot {
   public spool = new basebot.Spool<null, string>();
   public onconverse: basebot.ConversationHandler | null = null;
-  public sse: SSE;
+  public sse = new SSE();
 
   /**
    * The server routes for interacting with the bot.
@@ -50,9 +50,7 @@ export class WebBot implements basebot.Bot {
       // Send and receive messages.
       new libweb.Route('/chat/messages', async (req, res) => {
         if (req.method === 'GET') {
-          // Stream messages!
-          // TODO Just one connection at a time for now...
-          this.sse = new SSE();
+          // Pipe our SSE writer to this stream.
           this.sse.pipe(res);
         } else if (req.method === 'POST') {
           // Received a new message.
@@ -73,9 +71,6 @@ export class WebBot implements basebot.Bot {
   send(text: string) {
     // TODO Add the message to a log so we can send it out even if no one
     // is connected.
-    console.log(`sending to ${util.inspect(this.sse)}: ${text}`);
-    if (this.sse) {
-      this.sse.event('message', text);
-    }
+    this.sse.event('message', text);
   }
 }
