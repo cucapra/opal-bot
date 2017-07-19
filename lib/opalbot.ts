@@ -18,6 +18,7 @@ import { findURL, gitSummary, IVars, randomString } from './util';
 import { Calendar } from '../multical/caldav';
 import * as office from '../multical/office';
 import * as moment from 'moment';
+import * as nunjucks from 'nunjucks';
 
 /**
  * Our data model for keeping track of users' data.
@@ -79,6 +80,7 @@ export class OpalBot {
       db.addCollection("users")) as LokiCollection<User>;
 
     // Set up configuration web interface.
+    nunjucks.configure(webdir);
     this.webRoutes.push(new libweb.Route('/settings/:token', async (req, res, params) => {
       // Make sure we have a valid token.
       let token = params['token'];
@@ -90,7 +92,9 @@ export class OpalBot {
 
       if (req.method === 'GET') {
         // Send the form.
-        libweb.sendfile(res, path.join(webdir, 'settings.html'));
+        nunjucks.render('settings.html', {}, (err, rendered) => {
+          res.end(rendered);
+        });
       } else if (req.method === 'POST') {
         // Retrieve the settings.
         let data = await libweb.formdata(req);
