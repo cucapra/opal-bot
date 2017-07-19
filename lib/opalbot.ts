@@ -25,15 +25,14 @@ import * as nunjucks from 'nunjucks';
  */
 interface User {
   slack_id: string;
-  caldav?: {
-    url: string;
-    username: string;
-    password: string;
-  };
+  settings: Settings;
 }
 
+/**
+ * Settings that users can configure in the web interface.
+ */
 interface Settings {
-  service: 'caldav' | 'office';
+  service?: 'caldav' | 'office';
   caldav?: {
     url: string;
     username: string;
@@ -235,7 +234,7 @@ export class OpalBot {
     if (user) {
       return user;
     } else {
-      let newUser = { slack_id };
+      let newUser = { slack_id, settings: {} };
       this.users.insert(newUser);
       this.db.saveDatabase();
       return newUser;
@@ -258,20 +257,24 @@ export class OpalBot {
   async getCalendar(conv: Conversation, force=false): Promise<Calendar | null> {
     let user = this.getUser(conv);
     if (!force) {
-      if (user.caldav) {
-        return new Calendar(user.caldav.url, user.caldav.username,
-          user.caldav.password);
+      if (user.settings.service === "caldav") {
+        let cd = user.settings.caldav!;
+        return new Calendar(cd.url, cd.username, cd.password);
+      } else if (user.settings.service === "office") {
+        let token = user.settings.officeToken;
+        console.log('TODO: already authenticated with office');
+        return null;
       }
     }
 
+    // Get the settings from the user and store them.
     let settings = await this.gatherSettings(conv);
+    user.settings = settings;
+    this.users.update(user);
+    this.db.saveDatabase();
+    
     if (settings.service === 'caldav') {
       let cd = settings.caldav!;
-
-      user.caldav = cd;
-      this.users.update(user);
-      this.db.saveDatabase();
-
       return new Calendar(cd.url, cd.username, cd.password);
     } else if (settings.service === 'office') {
       console.log('TODO: authenticated with Office');
