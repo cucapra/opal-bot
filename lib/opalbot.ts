@@ -256,27 +256,22 @@ export class OpalBot {
    */
   async getCalendar(conv: Conversation, force=false): Promise<Calendar | null> {
     let user = this.getUser(conv);
-    if (!force) {
-      if (user.settings.service === "caldav") {
-        let cd = user.settings.caldav!;
-        return new Calendar(cd.url, cd.username, cd.password);
-      } else if (user.settings.service === "office") {
-        let token = user.settings.officeToken;
-        console.log('TODO: already authenticated with office');
-        return null;
-      }
-    }
 
-    // Get the settings from the user and store them.
-    let settings = await this.gatherSettings(conv);
-    user.settings = settings;
-    this.users.update(user);
-    this.db.saveDatabase();
+    // Get the settings from the user and store them. Unless we're forcing it,
+    // skip this step if we already have a configured service.
+    if (force || !user.settings.service) {
+      let settings = await this.gatherSettings(conv);
+      user.settings = settings;
+      this.users.update(user);
+      this.db.saveDatabase();
+    }
     
-    if (settings.service === 'caldav') {
-      let cd = settings.caldav!;
+    // Get the calendar from the appropriate service.
+    if (user.settings.service === 'caldav') {
+      let cd = user.settings.caldav!;
       return new Calendar(cd.url, cd.username, cd.password);
-    } else if (settings.service === 'office') {
+    } else if (user.settings.service === 'office') {
+      let token = user.settings.officeToken;
       console.log('TODO: authenticated with Office');
     }
 
