@@ -1,6 +1,7 @@
 import * as http from 'http';
 import * as querystring from 'querystring';
 import * as fs from 'fs';
+import * as url from 'url';
 
 /**
  * Read all the data from an HTTP request.
@@ -23,6 +24,14 @@ export function body(req: http.IncomingMessage): Promise<string> {
 export async function formdata(req: http.IncomingMessage) {
   let s = await body(req);
   return querystring.parse(s);
+}
+
+/**
+ * Parse the query string from an incoming request's URL.
+ */
+export function query(req: http.IncomingMessage) {
+  let u = new url.URL(req.url || '', 'http://example.com');
+  return u.searchParams;
 }
 
 /**
