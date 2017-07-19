@@ -27,9 +27,11 @@ async function main() {
     console.error("missing WIT_TOKEN");
     return;
   }
+  let web_url = process.env['WEB_URL'] || 'http://localhost:5000';
   let bot = new OpalBot(
     new Wit({ accessToken: wit_token }),
     await openDB(DB_NAME),
+    web_url,
   );
 
   // Parse the command-line options.

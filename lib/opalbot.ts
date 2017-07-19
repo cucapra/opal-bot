@@ -16,6 +16,7 @@ import * as path from 'path';
 import fetch from 'node-fetch';
 import { findURL, gitSummary, IVars, randomString } from './util';
 import { Calendar } from '../multical/caldav';
+import * as office from '../multical/office';
 import * as moment from 'moment';
 
 /**
@@ -58,11 +59,6 @@ export class OpalBot {
   public webSessions = new IVars<libweb.Params>();
 
   /**
-   * The web server URL (if it's running).
-   */
-  public webURL: string | null = null;
-
-  /**
    * Routes for the web server.
    */
   public webRoutes: libweb.Route[] = [];
@@ -70,6 +66,7 @@ export class OpalBot {
   constructor(
     public wit: Wit,
     public db: Loki,
+    public webURL: string,
     public webdir = 'web',
   ) {
     // Get or create a database collection for users.
@@ -156,7 +153,6 @@ export class OpalBot {
     let server = http.createServer(libweb.dispatch(this.webRoutes));
     return new Promise<void>((resolve, reject) => {
       server.listen(port, () => {
-        this.webURL = `http://localhost:${port}`;
         console.log(`web server running at ${this.webURL}`);
         resolve();
       });
