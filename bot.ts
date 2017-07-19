@@ -34,6 +34,13 @@ async function main() {
     web_url,
   );
 
+  // Office 365.
+  let office_id = process.env['OFFICE_CLIENT_ID'];
+  let office_secret = process.env['OFFICE_CLIENT_SECRET'];
+  if (office_id && office_secret) {
+    bot.addOffice(office_id, office_secret);
+  }
+
   // Parse the command-line options.
   let opts = minimist(process.argv.slice(2), {
     boolean: [ 'term', 'fb', 'slack', 'web' ],

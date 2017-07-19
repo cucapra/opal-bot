@@ -25,7 +25,7 @@ const SCOPES = [
 /**
  * The path for OAuth2 callbacks.
  */
-const AUTH_ENDPOINT = '/authorize';
+const AUTH_ENDPOINT = '/office/auth';
 
 /**
  * Generate a random string for use as a token.
@@ -122,15 +122,3 @@ export class Client {
     }
   }
 }
-
-// Smoke test.
-async function main() {
-  let c = new Client(process.argv[2], process.argv[3], 'http://localhost:8191');
-  let server = http.createServer(libweb.dispatch([c.authRoute]));
-  server.listen(8191);
-  let auth = await c.authenticate();
-  console.log(auth.url);
-  let token = await auth.token;
-  console.log('got a token!!!');
-}
-main();

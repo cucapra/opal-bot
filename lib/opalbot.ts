@@ -63,6 +63,11 @@ export class OpalBot {
    */
   public webRoutes: libweb.Route[] = [];
 
+  /**
+   * Connection for authenticating with the Office 365 API.
+   */
+  public officeClient: office.Client | null = null;
+
   constructor(
     public wit: Wit,
     public db: Loki,
@@ -157,6 +162,15 @@ export class OpalBot {
         resolve();
       });
     });
+  }
+
+  /**
+   * Add support for getting calendars via the Office 365 API. 
+   */
+  addOffice(id: string, secret: string) {
+    let client = new office.Client(id, secret, this.webURL);
+    this.webRoutes.push(client.authRoute);
+    this.officeClient = client;
   }
 
   /**
