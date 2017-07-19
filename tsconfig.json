@@ -4,6 +4,7 @@
         "outDir": "build",
         "target": "es6",
         "module": "commonjs",
+        "sourceMap": true,
 
         // Custom type declarations for Node modules.
         "baseUrl": ".",

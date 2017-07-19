@@ -69,21 +69,29 @@ export class Client {
 
     this.callbackUrl = url.resolve(baseUrl, AUTH_ENDPOINT);
 
-    this.authRoute = new libweb.Route(AUTH_ENDPOINT, (req, res) => {
+    this.authRoute = new libweb.Route(AUTH_ENDPOINT, async (req, res) => {
       let query = libweb.query(req);
       let code = query.get('code');
       if (!code) {
-        throw 'no code received';
+        console.error('missing code');
+        res.end('missing code');
+        return;
       }
 
-      this.auth.authorizationCode.getToken({
-        code,
-        redirect_uri: this.callbackUrl,
-      }).then(t => {
-        console.log(t);
-        let token = this.auth.accessToken.create(t);
-        this.authenticated(query.get('state'), token);
-      });
+      let t: oauth2.Token;
+      try {
+        t = await this.auth.authorizationCode.getToken({
+          code,
+          redirect_uri: this.callbackUrl,
+        });
+      } catch (err) {
+        console.error('authorization error', err);
+        res.end('token authorization error');
+        return;
+      }
+
+      let token = this.auth.accessToken.create(t);
+      this.authenticated(query.get('state'), token);
       res.end('ok');
     });
   }
