@@ -80,8 +80,15 @@ export class OpalBot {
       db.addCollection("users")) as LokiCollection<User>;
 
     // Set up configuration web interface.
-    nunjucks.configure(webdir);
-    this.webRoutes.push(new libweb.Route('/settings/:token', async (req, res, params) => {
+    this.webRoutes.push(this.settingsRoute());
+  }
+
+  /**
+   * The web route for showing and modifying user settings.
+   */
+  settingsRoute() {
+    nunjucks.configure(this.webdir);
+    return new libweb.Route('/settings/:token', async (req, res, params) => {
       // Make sure we have a valid token.
       let token = params['token'];
       if (!this.webSessions.has(token)) {
@@ -103,7 +110,7 @@ export class OpalBot {
       } else {
         libweb.notFound(req, res);
       }
-    }));
+    });
   }
 
   /**
