@@ -39,7 +39,7 @@ interface Settings {
     username: string;
     password: string;
   };
-  officeToken?: any;
+  officeToken?: office.Token;
 }
 
 /**

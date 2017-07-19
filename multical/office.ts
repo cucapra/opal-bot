@@ -43,13 +43,18 @@ async function randomString(bytes = 32): Promise<string> {
 }
 
 /**
+ * The token you need to authenticate requests to the Office API.
+ */
+export type Token = oauth2.AccessToken;
+
+/**
  * The type for callbacks for successful authentication.
  */
-export type TokenHandler = (token: oauth2.AccessToken) => void;
+export type TokenHandler = (token: Token) => void;
 
 export interface Authentication {
   url: string;
-  token: Promise<oauth2.AccessToken>;
+  token: Promise<Token>;
 };
 
 /**
@@ -110,7 +115,7 @@ export class Client {
       state,
     });
 
-    let promise = new Promise<oauth2.AccessToken>((resolve, reject) => {
+    let promise = new Promise<Token>((resolve, reject) => {
       this.handlers.set(state, resolve);
     });
 
@@ -120,7 +125,7 @@ export class Client {
   /**
    * Our internal callback for when the authentication URL is triggered.
    */
-  authenticated(state: string | null, token: oauth2.AccessToken) {
+  authenticated(state: string | null, token: Token) {
     if (!state) {
       return;
     }
