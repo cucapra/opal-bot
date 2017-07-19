@@ -42,8 +42,19 @@ async function randomString(bytes = 32): Promise<string> {
   });
 }
 
+/**
+ * The type for callbacks for successful authentication.
+ */
 export type TokenHandler = (token: oauth2.AccessToken) => void;
 
+export interface Authentication {
+  url: string;
+  token: Promise<oauth2.AccessToken>;
+};
+
+/**
+ * A client for dispatching authentication requests to the Office365 API.
+ */
 export class Client {
   readonly authRoute: libweb.Route;
   readonly auth: oauth2.OAuthClient;
@@ -77,17 +88,30 @@ export class Client {
     });
   }
 
-  async authenticate(cbk: TokenHandler) {
+  /**
+   * Authenticate a user. This returns both the URL that the user should
+   * follow to authenticate and a promise that resolves when the
+   * authentication succeeds.
+   */
+  async authenticate(): Promise<Authentication> {
     let state = await randomString();
-    this.handlers.set(state, cbk);
 
-    return this.auth.authorizationCode.authorizeURL({
+    let url = this.auth.authorizationCode.authorizeURL({
       redirect_uri: this.callbackUrl,
       scope: SCOPES.join(" "),
       state,
     });
+
+    let promise = new Promise<oauth2.AccessToken>((resolve, reject) => {
+      this.handlers.set(state, resolve);
+    });
+
+    return { url, token: promise };
   }
 
+  /**
+   * Our internal callback for when the authentication URL is triggered.
+   */
   authenticated(state: string | null, token: oauth2.AccessToken) {
     if (!state) {
       return;
@@ -104,9 +128,9 @@ async function main() {
   let c = new Client(process.argv[2], process.argv[3], 'http://localhost:8191');
   let server = http.createServer(libweb.dispatch([c.authRoute]));
   server.listen(8191);
-  let u = await c.authenticate(token => {
-    console.log("got that token fam");
-  });
-  console.log(u);
+  let auth = await c.authenticate();
+  console.log(auth.url);
+  let token = await auth.token;
+  console.log('got a token!!!');
 }
 main();
