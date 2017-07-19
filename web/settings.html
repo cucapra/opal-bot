@@ -28,5 +28,12 @@
             <input type="submit" value="Log In">
         </p>
     </form>
+
+    {% if officeAuthURL %}
+    <h3>Office 365</h3>
+    <p>
+        <a href="{{ officeAuthURL }}">Link your calendar.</a>
+    </p>
+    {% endif %}
 </body>
 </html>

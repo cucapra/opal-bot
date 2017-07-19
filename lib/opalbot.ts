@@ -32,6 +32,16 @@ interface User {
   };
 }
 
+interface Settings {
+  service: 'caldav' | 'office';
+  caldav?: {
+    url: string;
+    username: string;
+    password: string;
+  };
+  officeToken?: any;
+}
+
 /**
  * Get a quick text summary of things on a calendar.
  */
@@ -54,10 +64,9 @@ export class OpalBot {
   public users: LokiCollection<User>;
 
   /**
-   * Web sessions. Maps opaque URL tokens to callbacks that continue the
-   * conversation.
+   * Web sessions representing pending requests for settings from the user.
    */
-  public webSessions = new IVars<libweb.Params>();
+  public webSessions = new IVars<Settings>();
 
   /**
    * Routes for the web server.
@@ -99,14 +108,38 @@ export class OpalBot {
 
       if (req.method === 'GET') {
         // Send the form.
-        nunjucks.render('settings.html', {}, (err, rendered) => {
+        let ctx: { [k: string]: string } = {};
+        if (this.officeClient) {
+          let auth = await this.officeClient.authenticate();
+          ctx['officeAuthURL'] = auth.url;
+          auth.token.then(t => {
+            let settings: Settings = {
+              service: 'office',
+              officeToken: t,
+            };
+            this.webSessions.put(token, settings);
+          });
+        }
+        nunjucks.render('settings.html', ctx, (err, rendered) => {
           res.end(rendered);
         });
       } else if (req.method === 'POST') {
         // Retrieve the settings.
         let data = await libweb.formdata(req);
-        this.webSessions.put(token, data);
-        res.end('got it; thanks!');
+        if (data['service'] === 'caldav') {
+          let settings: Settings = {
+            service: 'caldav',
+            caldav: {
+              url: data['url'],
+              username: data['username'],
+              password: data['password'],
+            },
+          };
+          this.webSessions.put(token, settings);
+          res.end('got it; thanks!');
+        } else {
+          res.end('sorry; I did not understand the form');
+        }
       } else {
         libweb.notFound(req, res);
       }
@@ -231,17 +264,17 @@ export class OpalBot {
       }
     }
 
-    let resp = await this.gatherSettings(conv);
-    if (resp['service'] === 'caldav') {
-      let url = resp['url'];
-      let username = resp['username'];
-      let password = resp['password'];
+    let settings = await this.gatherSettings(conv);
+    if (settings.service === 'caldav') {
+      let cd = settings.caldav!;
 
-      user.caldav = { url, username, password };
+      user.caldav = cd;
       this.users.update(user);
       this.db.saveDatabase();
 
-      return new Calendar(url, username, password);
+      return new Calendar(cd.url, cd.username, cd.password);
+    } else if (settings.service === 'office') {
+      console.log('TODO: authenticated with Office');
     }
 
     return null;
