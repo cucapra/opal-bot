@@ -4,9 +4,11 @@ build:
 	yarn run build
 	yarn run build-web
 
+# Run the bot with environment variables from `.env` and arguments from $ARGS.
 .PHONY: run
 run:
-	node build/bot.js
+	export $$(cat .env | xargs) && \
+		node build/bot.js $(ARGS)
 
 .PHONY: deploy update
 deploy:
