@@ -274,11 +274,9 @@ export class OpalBot {
       let token = user.settings.officeToken!;
       console.log('TODO: authenticated with Office');
       let cal = new office.Calendar(token);
-      let today = new Date();
-      let lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
-      let events = await cal.getEvents(lastWeek, today);
+      let events = await cal.getEvents(moment(), moment().add(7, 'days'));
       for (let event of events) {
-        console.log("TODO", event.Subject);
+        console.log("TODO!", event.title);
       }
     }
 

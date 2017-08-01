@@ -5,6 +5,8 @@ import * as url from 'url';
 import * as crypto from 'crypto';
 import * as outlook from 'node-outlook';
 import * as jwt from 'jsonwebtoken';
+import * as calbase from './calbase';
+import * as moment from 'moment';
 
 /**
  * OAuth2 parameters for connecting to Office 365.
@@ -152,42 +154,10 @@ export class Client {
 }
 
 /**
- * Convert a nonnegative integer to a string, padded with a zero if it's
- * only a single digit.
+ * Given a `Moment`, format a string for the Office 365 REST API.
  */
-function pad0(n: number): string {
-  if (n < 10) {
-    return '0' + n;
-  } else {
-    return n.toString();
-  }
-}
-
-/**
- * Given a JavaScript `Date`, format a string for the Office 365 REST API.
- */
-function officeDateLocal(d: Date): string {
-  return d.getFullYear() +
-    '-' + pad0(d.getMonth() + 1) +
-    '-' + pad0(d.getDate()) +
-    'T' + pad0(d.getHours()) +
-    ':' + pad0(d.getMinutes()) +
-    ':' + pad0(d.getSeconds());
-}
-
-/**
- * Given a JavaScript `Date`, create an Office 365 REST API object consisting
- * of a `DateTime` value and a `TimeZone` string. This makes a time value in
- * UTC, which is always correct but loses the time zone information.
- */
-function officeDateUTC(d: Date) {
-  let s = d.getUTCFullYear() +
-    '-' + pad0(d.getUTCMonth() + 1) +
-    '-' + pad0(d.getUTCDate()) +
-    'T' + pad0(d.getUTCHours()) +
-    ':' + pad0(d.getUTCMinutes()) +
-    ':' + pad0(d.getUTCSeconds());
-  return { DateTime: s, TimeZone: 'UTC' };
+function dateToOfficeLocal(m: moment.Moment): string {
+  return m.format('YYYY-MM-DDThh:mm:ss');
 }
 
 /**
@@ -208,6 +178,25 @@ function emailFromToken(token: Token): string {
 }
 
 /**
+ * Convert a date from the office API's representation into a Moment.
+ */
+function dateFromOffice(dt: outlook.DateTime): moment.Moment {
+  // TODO: We're currently ignoring the embedded time zone.
+  return moment(dt.DateTime);
+}
+
+/**
+ * Convert an event from the office API into our public representation.
+ */
+function eventFromOffice(event: outlook.Event): calbase.Event {
+  return {
+    title: event.Subject,
+    start: dateFromOffice(event.Start),
+    end: dateFromOffice(event.End),
+  };
+}
+
+/**
  * The parameters for `Calendar.request`.
  * 
  * This is a subset of the parameters for the underlying library. We provide
@@ -218,7 +207,7 @@ type RequestParams = Pick<outlook.APICallParams, 'url' | 'method' | 'query'>;
 /**
  * Views onto a particular Office 365 user's calendar data.
  */
-export class Calendar {
+export class Calendar implements calbase.Calendar {
   public readonly email: string;
 
   constructor(
@@ -264,17 +253,17 @@ export class Calendar {
   /**
    * Get event instances from the user's calendar between the two dates.
    */
-  async getEvents(start: Date, end: Date) {
+  async getEvents(start: moment.Moment, end: moment.Moment) {
     let data = await this.request({
       url: 'https://outlook.office.com/api/v2.0/me/calendarview',
       method: 'GET',
       query: {
-        'StartDateTime': officeDateLocal(start),
-        'EndDateTime': officeDateLocal(end),
+        'StartDateTime': dateToOfficeLocal(start),
+        'EndDateTime': dateToOfficeLocal(end),
       },
     });
 
     let events: outlook.Event[] = data.value;
-    return events;
+    return events.map(eventFromOffice);
   }
 }
