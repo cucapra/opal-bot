@@ -1,7 +1,12 @@
+/**
+ * A calendar source for CalDAV servers, including iCloud.
+ */
+
 import fetch from 'node-fetch';
 import * as xml2js from 'xml2js';
 import * as ical from 'ical.js';
 import * as icsutil from './icsutil';
+import * as calbase from './calbase';
 import * as moment from 'moment';
 
 /**
@@ -46,6 +51,24 @@ function parseEvent(ics: string) {
     return event;
   }
   throw "no event in calendar";
+}
+
+/**
+ * Convert from an iCal time structure into a Moment.
+ */
+function dateFromICS(time: ical.Time): moment.Moment {
+  return moment(time.toString());
+}
+
+/**
+ * Convert a parsed iCal event into our common event representation.
+ */
+function eventFromICS(event: ical.Event): calbase.Event {
+  return {
+    title: event.summary,
+    start: dateFromICS(event.startDate),
+    end: dateFromICS(event.endDate),
+  };
 }
 
 /**
@@ -107,15 +130,17 @@ export class Calendar {
     let data = await parseXML(await res.text());
 
     // The response XML document has this form:
-    // <multistatus>
-    //   <response><propstat><prop><calendar-data>[ICS HERE]
-    //   ...
-    // </multistatus>
+    //   <multistatus>
+    //     <response><propstat><prop><calendar-data>[ICS HERE]
+    //     ...
+    //   </multistatus>
+    // Parse each ICS document in this structure.
     let events = [];
     for (let response of data['multistatus']['response']) {
       let ics = response['propstat'][0]['prop'][0]['calendar-data'][0]['_'];
       events.push(parseEvent(ics));
     }
-    return events;
+
+    return events.map(eventFromICS);
   }
 }

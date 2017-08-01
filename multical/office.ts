@@ -1,3 +1,7 @@
+/**
+ * A calendar source for Office 365 accounts.
+ */
+
 import * as oauth2 from 'simple-oauth2';
 import * as libweb from '../libweb';
 import * as http from 'http';

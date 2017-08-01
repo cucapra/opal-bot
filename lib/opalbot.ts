@@ -48,7 +48,7 @@ async function getSomeEvents(cal: Calendar) {
   let events = await cal.getEvents(moment(), moment().add(7, 'days'));
   let out = [];
   for (let event of events) {
-    out.push(`${event.startDate.toString()}: ${event.summary}`);
+    out.push(`${event.start.format()}: ${event.title}`);
   }
   return out.join('\n');
 }
