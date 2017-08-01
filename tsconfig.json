@@ -11,7 +11,8 @@
         "paths": {
           "ical.js": ["types/ical.js.d.ts"],
           "messenger-bot": ["types/messenger-bot.d.ts"],
-          "sse-writer": ["types/sse-writer.d.ts"]
+          "sse-writer": ["types/sse-writer.d.ts"],
+          "node-outlook": ["types/node-outlook.d.ts"]
         }
     }
 }

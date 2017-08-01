@@ -271,8 +271,13 @@ export class OpalBot {
       let cd = user.settings.caldav!;
       return new Calendar(cd.url, cd.username, cd.password);
     } else if (user.settings.service === 'office') {
-      let token = user.settings.officeToken;
+      let token = user.settings.officeToken!;
       console.log('TODO: authenticated with Office');
+      let cal = new office.Calendar(token);
+      let today = new Date();
+      let lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+      let data = await cal.getEvents(lastWeek, today);
+      console.log("TODO data", data);
     }
 
     return null;

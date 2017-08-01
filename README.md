@@ -17,3 +17,10 @@ Here's how to get it running:
 [slackbot]: https://api.slack.com/bot-users
 
 Or, you can run a local version for fun by skipping the Slack token and providing the `-t` flag (for *terminal*).
+
+Hacking
+-------
+
+Because there are a lot of environment variables involved, you might want to put them in a [.env file](https://github.com/bkeepers/dotenv). If you do that, you can run the bot using a convenient Make target:
+
+    $ make run ARGS=-t
