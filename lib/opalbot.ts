@@ -276,8 +276,10 @@ export class OpalBot {
       let cal = new office.Calendar(token);
       let today = new Date();
       let lastWeek = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
-      let data = await cal.getEvents(lastWeek, today);
-      console.log("TODO data", data);
+      let events = await cal.getEvents(lastWeek, today);
+      for (let event of events) {
+        console.log("TODO", event.Subject);
+      }
     }
 
     return null;

@@ -29,6 +29,60 @@ export interface APICallParams {
   query: { [key: string]: string };
 }
 
+/**
+ * Used to represent people in calendar events.
+ */
+export interface EmailAddress {
+  Name: string;
+  Address: string;
+}
+
+/**
+ * Dates in the API responses.
+ */
+export interface DateTime {
+  DateTime: string;
+  TimeZone: string;
+}
+
+/**
+ * The type for calendar events returned from the API.
+ */
+export interface Event {
+  Id: string;
+  CreatedDateTime: string;
+  LastModifiedDateTime: string;
+  ChangeKey: string;
+  Categories: any[],
+  OriginalStartTimeZone: string;
+  OriginalEndTimeZone: string;
+  iCalUId: string;
+  ReminderMinutesBeforeStart: number;
+  IsReminderOn: boolean;
+  HasAttachments: boolean;
+  Subject: string;
+  BodyPreview: string;
+  Importance: string;
+  Sensitivity: string;
+  IsAllDay: boolean;
+  IsCancelled: boolean;
+  IsOrganizer: boolean;
+  ResponseRequested: boolean;
+  SeriesMasterId: string;
+  ShowAs: string;
+  Type: string;
+  WebLink: string;
+  OnlineMeetingUrl: string | null;
+  ResponseStatus: { Response: string, Time: string };
+  Body: { ContentType: string, Content: string };
+  Start: DateTime;
+  End: DateTime;
+  Location: { DisplayName: string };
+  Recurrence: any;
+  Attendees: { Type: string, Status: any, EmailAddress: EmailAddress }[];
+  Organizer: { EmailAddress: EmailAddress }
+}
+
 export module calendar {
   /**
    * Get events from a user's calendar.

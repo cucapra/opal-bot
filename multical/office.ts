@@ -240,7 +240,7 @@ export class Calendar {
     let fullParams = {
       token: atoken,
       user: {
-        email: "xxx",
+        email: "xxx",  // Seems to be ignored?
         timezone: "UTC",
       },
       ...params
@@ -264,8 +264,8 @@ export class Calendar {
   /**
    * Get event instances from the user's calendar between the two dates.
    */
-  getEvents(start: Date, end: Date) {
-    return this.request({
+  async getEvents(start: Date, end: Date) {
+    let data = await this.request({
       url: 'https://outlook.office.com/api/v2.0/me/calendarview',
       method: 'GET',
       query: {
@@ -273,5 +273,8 @@ export class Calendar {
         'EndDateTime': officeDateLocal(end),
       },
     });
+
+    let events: outlook.Event[] = data.value;
+    return events;
   }
 }
