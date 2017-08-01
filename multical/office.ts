@@ -52,8 +52,21 @@ export type Token = oauth2.AccessToken;
  */
 export type TokenHandler = (token: Token) => void;
 
+/**
+ * An Office 365 authentication request.
+ */
 export interface Authentication {
+  /**
+   * The URL that the user should follow to log in to Office 365 in a
+   * browser.
+   */
   url: string;
+
+  /**
+   * A promise that resolves when the user has successfully completed the
+   * login flow in the browser. Produces an authentication token that
+   * can be used for future requests.
+   */
   token: Promise<Token>;
 };
 
