@@ -15,8 +15,9 @@ import * as http from 'http';
 import * as path from 'path';
 import fetch from 'node-fetch';
 import { findURL, gitSummary, IVars, randomString } from './util';
-import { Calendar } from '../multical/caldav';
+import * as caldav from '../multical/caldav';
 import * as office from '../multical/office';
+import { Calendar } from '../multical/calbase';
 import * as moment from 'moment';
 import * as nunjucks from 'nunjucks';
 
@@ -269,15 +270,10 @@ export class OpalBot {
     // Get the calendar from the appropriate service.
     if (user.settings.service === 'caldav') {
       let cd = user.settings.caldav!;
-      return new Calendar(cd.url, cd.username, cd.password);
+      return new caldav.Calendar(cd.url, cd.username, cd.password);
     } else if (user.settings.service === 'office') {
       let token = user.settings.officeToken!;
-      console.log('TODO: authenticated with Office');
-      let cal = new office.Calendar(token);
-      let events = await cal.getEvents(moment(), moment().add(7, 'days'));
-      for (let event of events) {
-        console.log("TODO!", event.title);
-      }
+      return new office.Calendar(token);
     }
 
     return null;
