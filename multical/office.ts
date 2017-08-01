@@ -208,6 +208,14 @@ function emailFromToken(token: Token): string {
 }
 
 /**
+ * The parameters for `Calendar.request`.
+ * 
+ * This is a subset of the parameters for the underlying library. We provide
+ * the authentication token and the user details.
+ */
+type RequestParams = Pick<outlook.APICallParams, 'url' | 'method' | 'query'>;
+
+/**
  * Views onto a particular Office 365 user's calendar data.
  */
 export class Calendar {
@@ -222,9 +230,25 @@ export class Calendar {
   /**
    * Internal wrapper for Office API requests.
    */
-  request(params: outlook.APICallParams): Promise<any> {
+  request(params: RequestParams): Promise<any> {
+    // The Office API only wants the access token string. And the OAuth
+    // library's typings don't make this public, so we need to resort to
+    // a hack...
+    let atoken: string = (this.token.token as any).access_token;
+    
+    // Add on our user-identifying parameters.
+    let fullParams = {
+      token: atoken,
+      user: {
+        email: "xxx",
+        timezone: "UTC",
+      },
+      ...params
+    };
+    
+    // Make the API call.
     return new Promise<any>((resolve, reject) => {
-      outlook.base.makeApiCall(params, (error: any, response: any) => {
+      outlook.base.makeApiCall(fullParams, (error: any, response: any) => {
         if (error) {
           reject(error);
         } else if (response.statusCode != 200) {
@@ -238,21 +262,11 @@ export class Calendar {
   }
 
   /**
-   * Get a few event instances from the user's calendar. (Experimental.)
+   * Get event instances from the user's calendar between the two dates.
    */
   getEvents(start: Date, end: Date) {
-    // The Office API only wants the access token string. And the OAuth
-    // library's typings don't make this public, so we need to resort to
-    // a hack...
-    let atoken: string = (this.token.token as any).access_token;
-
     return this.request({
       url: 'https://outlook.office.com/api/v2.0/me/calendarview',
-      token: atoken,
-      user: {
-        email: "xxx",
-        timezone: "UTC",
-      },
       method: 'GET',
       query: {
         'StartDateTime': officeDateLocal(start),
