@@ -18,6 +18,17 @@ export interface User {
   timezone: string;
 }
 
+/**
+ * Parameters for raw API calls.
+ */
+export interface APICallParams {
+  url: string;
+  token: string;
+  user: User;
+  method: string;
+  query: { [key: string]: string };
+}
+
 export module calendar {
   /**
    * Get events from a user's calendar.
@@ -37,13 +48,7 @@ export module base {
    * Central API invocation function.
    */
   export function makeApiCall(
-    parameters: {
-      url: string,
-      token: string,
-      user: User,
-      method: string,
-      query: { [key: string]: string },
-    },
+    parameters: APICallParams,
     callback: (error: any, response: any) => void,
   ): void;
 }

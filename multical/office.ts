@@ -220,6 +220,24 @@ export class Calendar {
   }
 
   /**
+   * Internal wrapper for Office API requests.
+   */
+  request(params: outlook.APICallParams): Promise<any> {
+    return new Promise<any>((resolve, reject) => {
+      outlook.base.makeApiCall(params, (error: any, response: any) => {
+        if (error) {
+          reject(error);
+        } else if (response.statusCode != 200) {
+          reject("HTTP error " + response.statusCode +
+                 "; body: " + JSON.stringify(response.body));
+        } else {
+          resolve(response.body);
+        }
+      });
+    });
+  }
+
+  /**
    * Get a few event instances from the user's calendar. (Experimental.)
    */
   getEvents(start: Date, end: Date) {
@@ -228,8 +246,7 @@ export class Calendar {
     // a hack...
     let atoken: string = (this.token.token as any).access_token;
 
-    // Parameters for the API request.
-    let parameters = {
+    return this.request({
       url: 'https://outlook.office.com/api/v2.0/me/calendarview',
       token: atoken,
       user: {
@@ -241,19 +258,6 @@ export class Calendar {
         'StartDateTime': officeDateLocal(start),
         'EndDateTime': officeDateLocal(end),
       },
-    };
-
-    return new Promise<any>((resolve, reject) => {
-      outlook.base.makeApiCall(parameters, (error: any, response: any) => {
-        if (error) {
-          reject(error);
-        } else if (response.statusCode != 200) {
-          reject("HTTP error " + response.statusCode +
-                 "; body: " + JSON.stringify(response.body));
-        } else {
-          resolve(response.body);
-        }
-      });
     });
   }
 }
